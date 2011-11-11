@@ -8,12 +8,16 @@ var app = require('express').createServer()
 var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
+
+var server = new mongodb.Server("127.0.0.1", 27017, {});
 var playersCollection;
 
-var dbClient = new mongodb.Db('balibot', new mongodb.Server("127.0.0.1", 27017, {}), {}).open(function (error, client) {
+new mongodb.Db('balibot', server, {}).open(function (error, client) {
   if (error) throw error;
+  
   playersCollection = new mongodb.Collection(client, 'players');
 });
+
 
 app.listen(9091);
 
@@ -22,11 +26,24 @@ app.get('/', function(req, res) {
 });
 
 io.sockets.on('connection', function (socket) {
-  console.log("Recebi connection! ->", socket.id);
-  socket.broadcast.emit("UTILIZADOR "+socket.id+" LIGOU-SE!");
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log("LOLAO", data);
+  
+  console.log("new browser client: ", socket.id);
+    
+  socket.emit('READY', { hello: 'server is ready and accepting clients' });
+
+  // possible messages:
+    //   player_added
+    //   game_started
+    //   player_dead
+    //   game_finished
+  socket.on('game_started', function (data) {
+    console.log("NEW GAME HAS STARTED", data);
+  });
+  socket.on('player_dead', function (data) {
+    console.log("A PLAYER HAS DIED", data);
+  });
+  socket.on('game_finished', function (data) {
+    console.log("THIS GAME HAS JUST FINISHED", data);
   });
 });
 
@@ -51,19 +68,43 @@ var server = net.createServer(function(socket) {
       console.log("Nickname:"+name);
       playerManager.addPlayer(socket, imei, name);
 
-      playersCollection.find({IMEI: imei}).toArray(function(err, results) {
-        console.log(err);
-        console.log(results);
-        // FIXME - ficar com user
-      });
+      var playerOnTheDB;
 
-      //se nao existir na db - FIXME
-      playersCollection.insert({IMEI: imei, nick: name, score: 0}, {safe:true}, function(err, objects) {
-        if (err) console.warn(err.message);
-        if (err && err.message.indexOf('E11000 ') !== -1) {
-          console.log("duplicated id");
+      console.log("!!!!! NEW USER COMING IN !!!!!");
+
+      playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
+
+        if(docs.length > 0){
+          playerOnTheDB = docs[0];
+          console.log("found player: " + playerOnTheDB);
+          console.log("WE HAVE USER IN MONGO");
+        }else{
+          console.log("WE HAVE NO USER IN MONGO");
+          
+          playersCollection.insert({IMEI: imei, name: name, score: 0}, {safe:true}, function(err, objects) {
+            if (err) console.warn(err.message);
+            if (err && err.message.indexOf('E11000 ') !== -1) {
+              console.log("duplicated id");
+            }
+          });
+  
+          playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, results) {
+            if(err){
+              console.log("BODE GRANDE: " + err);
+            }
+  
+            console.log("found in mongo after inserting: " + results);
+  
+            if(results.length > 0){
+              playerOnTheDB = results[0];
+            }
+          });
+  
+          console.log("no user, just inserted it: " + playerOnTheDB);
         }
       });
+
+      socket.write('{message:"welcome", color: "red"}');
 
       console.log(playerManager.getPlayers());
     } else if (type == TYPE_POS) {
