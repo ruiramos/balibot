@@ -16,8 +16,16 @@ public class Client {
 	private DataOutputStream output;
 	
 	private Context mContext;
+	private static Client instance = null;
 	
-	public Client(Context context) {
+	public static Client getInstance() {
+		if (instance == null) {
+			instance = new Client();
+		}
+		return instance;
+	}
+	
+	public void setContext(Context context) {
 		this.mContext = context;
 	}
 	
@@ -56,13 +64,13 @@ public class Client {
 	
 	public void sendTurn(int direction) {
 		switch(direction) {
-		case Main.POSITION_LEFT:
+		case Game.POSITION_LEFT:
 			turnLeft();
 			break;
-		case Main.POSITION_RIGHT:
+		case Game.POSITION_RIGHT:
 			turnRight();
 			break;
-		case Main.POSITION_CENTER:
+		case Game.POSITION_CENTER:
 			stopTurn();
 			break;
 		}
@@ -70,7 +78,7 @@ public class Client {
 	
 	private void turnLeft() {
 		try {
-			output.writeBytes("pos:"+Main.POSITION_LEFT);
+			output.writeBytes("pos:"+Game.POSITION_LEFT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -79,7 +87,7 @@ public class Client {
 	
 	private void turnRight() {
 		try {
-			output.writeBytes("pos:"+Main.POSITION_RIGHT);
+			output.writeBytes("pos:"+Game.POSITION_RIGHT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -88,7 +96,7 @@ public class Client {
 	
 	private void stopTurn() {
 		try {
-			output.writeBytes("pos:"+Main.POSITION_CENTER);
+			output.writeBytes("pos:"+Game.POSITION_CENTER);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
