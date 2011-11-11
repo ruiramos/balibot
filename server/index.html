@@ -5,7 +5,7 @@
 <script>
   var socket = io.connect('ws://localhost');
   socket.on('READY', function (data) {
-    console.log("LOLADA -->", data);
+    console.log("SERVER IS READY, ", data);
     // possible messages:
     //   player_added
     //   game_started
