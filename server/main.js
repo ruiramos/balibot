@@ -1,3 +1,6 @@
+/**************
+* Browser code
+***************/
 var playerManager = require('./playermanager.js');
 
 var app = require('express').createServer()
@@ -7,7 +10,6 @@ var app = require('express').createServer()
 
 var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
-
 
 var server = new mongodb.Server("127.0.0.1", 27017, {});
 var playersCollection;
@@ -26,11 +28,8 @@ app.get('/', function(req, res) {
 });
 
 io.sockets.on('connection', function (socket) {
-  
   console.log("new browser client: ", socket.id);
-    
   socket.emit('READY', { hello: 'server is ready and accepting clients' });
-
   // possible messages:
     //   player_added
     //   game_started
@@ -47,8 +46,9 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-//------------------------------------------------
-
+/*******************
+* Client code
+*******************/
 var net = require('net');
 var util = require('util');
 
@@ -74,11 +74,11 @@ var server = net.createServer(function(socket) {
 
       playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
 
-        if(docs.length > 0){
+        if (docs.length > 0) {
           playerOnTheDB = docs[0];
           console.log("found player: " + playerOnTheDB);
           console.log("WE HAVE USER IN MONGO");
-        }else{
+        } else {
           console.log("WE HAVE NO USER IN MONGO");
           
           playersCollection.insert({IMEI: imei, name: name, score: 0}, {safe:true}, function(err, objects) {
