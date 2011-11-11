@@ -1,7 +1,7 @@
 var app = require('express').createServer()
   , io = require('socket.io').listen(app);
 
-app.listen(9090);
+app.listen(9091);
 
 app.get('/', function(req, res) {
   res.sendfile(__dirname + '/index.html');
@@ -15,3 +15,15 @@ io.sockets.on('connection', function (socket) {
     console.log("LOLAO", data);
   });
 });
+
+//------------------------------------------------
+
+var net = require('net');
+
+var server = net.createServer(function(socket) {});
+
+server.on('connection', function(socket) {
+  console.log("CONNECTION DE ", socket);
+});
+
+server.listen(9090);
