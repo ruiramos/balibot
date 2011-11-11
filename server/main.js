@@ -20,10 +20,26 @@ io.sockets.on('connection', function (socket) {
 
 var net = require('net');
 
-var server = net.createServer(function(socket) {});
+var server = net.createServer(function(socket) {
+  socket.on('data', function(data) {
+    console.log("RCV: "+data);
+    data = ""+data;
+    var message = data.split(':');
+    var type = message[0];
+    console.log("TYPE: _"+type+"_");
+    if (type == "id") {
+      console.log("IMEI:"+message[1]);
+      console.log("Nickname:"+message[2]);
+    } else if (type == "position") {
+      console.log("Position change: "+message[1]);
+    } else {
+      console.log("AI QUE BODE! ESTE GAJO TA A TENTAR CHEATS");
+    }
+  });
+});
 
 server.on('connection', function(socket) {
-  console.log("CONNECTION DE ", socket);
+  console.log("CONNECTION!");
 });
 
 server.listen(9090);
