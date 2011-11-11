@@ -22,7 +22,7 @@ public class Main extends Activity implements SensorEventListener {
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
 	
-	private Client client = new Client();
+	private Client client = new Client(this);
 	
 	private static int CONTROL_AXIS = SensorManager.AXIS_Y;
 	private static int TRESHOLD = 3;
@@ -31,8 +31,9 @@ public class Main extends Activity implements SensorEventListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+		mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
     mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    client.setName("Rikas");
 	}
 	
 	protected void onResume() {

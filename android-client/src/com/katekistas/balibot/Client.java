@@ -5,13 +5,20 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import android.content.Context;
+import android.telephony.TelephonyManager;
+
 public class Client {	
 	private boolean connected = false;
 	private Socket socket = null;
+	private String name;
 	
 	private DataOutputStream output;
 	
-	public Client() {
+	private Context mContext;
+	
+	public Client(Context context) {
+		this.mContext = context;
 	}
 	
 	public boolean connect(String ip, int port) {
@@ -20,6 +27,7 @@ public class Client {
 		try {
 			socket = new Socket(ip, port);
 			output = new DataOutputStream(socket.getOutputStream());
+			output.writeChars("id:"+getIMEI()+":"+name);
 			connected = true;
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -36,9 +44,14 @@ public class Client {
 	public void disconnect() {
 		try {
 			socket.close();
+			connected = false;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	public void sendTurn(int direction) {
@@ -57,7 +70,7 @@ public class Client {
 	
 	private void turnLeft() {
 		try {
-			output.writeInt(Main.POSITION_LEFT);
+			output.writeChars("position:"+Main.POSITION_LEFT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -66,7 +79,7 @@ public class Client {
 	
 	private void turnRight() {
 		try {
-			output.writeInt(Main.POSITION_RIGHT);
+			output.writeChars("position:"+Main.POSITION_RIGHT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -75,10 +88,15 @@ public class Client {
 	
 	private void stopTurn() {
 		try {
-			output.writeInt(Main.POSITION_CENTER);
+			output.writeChars("position:"+Main.POSITION_CENTER);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
 		}
+	}
+	
+	private String getIMEI() {
+		TelephonyManager telephonyManager = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
+		return telephonyManager.getDeviceId();
 	}
 }
