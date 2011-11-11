@@ -27,7 +27,7 @@ public class Client {
 		try {
 			socket = new Socket(ip, port);
 			output = new DataOutputStream(socket.getOutputStream());
-			output.writeChars("id:"+getIMEI()+":"+name);
+			output.writeBytes("id:"+getIMEI()+":"+name);
 			connected = true;
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -70,7 +70,7 @@ public class Client {
 	
 	private void turnLeft() {
 		try {
-			output.writeChars("position:"+Main.POSITION_LEFT);
+			output.writeBytes("pos:"+Main.POSITION_LEFT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -79,7 +79,7 @@ public class Client {
 	
 	private void turnRight() {
 		try {
-			output.writeChars("position:"+Main.POSITION_RIGHT);
+			output.writeBytes("pos:"+Main.POSITION_RIGHT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -88,7 +88,7 @@ public class Client {
 	
 	private void stopTurn() {
 		try {
-			output.writeChars("position:"+Main.POSITION_CENTER);
+			output.writeBytes("pos:"+Main.POSITION_CENTER);
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();

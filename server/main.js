@@ -19,21 +19,24 @@ io.sockets.on('connection', function (socket) {
 //------------------------------------------------
 
 var net = require('net');
+var util = require('util');
+
+// Message types
+var TYPE_ID = "id";
+var TYPE_POS = "pos";
 
 var server = net.createServer(function(socket) {
   socket.on('data', function(data) {
-    console.log("RCV: "+data);
-    data = ""+data;
-    var message = data.split(':');
+    var message = message = data.toString('utf8', 0, data.length).split(":");
     var type = message[0];
-    console.log("TYPE: _"+type+"_");
-    if (type == "id") {
+    
+    if (type == TYPE_ID) {
       console.log("IMEI:"+message[1]);
       console.log("Nickname:"+message[2]);
-    } else if (type == "position") {
+    } else if (type == TYPE_POS) {
       console.log("Position change: "+message[1]);
     } else {
-      console.log("AI QUE BODE! ESTE GAJO TA A TENTAR CHEATS");
+      console.log("Unknown message type from client! (cheater?)");
     }
   });
 });

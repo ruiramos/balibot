@@ -61,15 +61,16 @@ public class Main extends Activity implements SensorEventListener {
 		
 		float value = event.values[CONTROL_AXIS-1];
 		TextView direction = (TextView) findViewById(R.id.direction);
-		Log.d(TAG, "Valor do sensor: "+value);
 		if (value>TRESHOLD && lastPos != POSITION_RIGHT) {
 			lastPos = POSITION_RIGHT;
 			direction.setText("DIREITA! >>>> ");
 			client.sendTurn(POSITION_RIGHT);
 		} else if (value<(0-TRESHOLD) && lastPos != POSITION_LEFT) {
+			lastPos = POSITION_LEFT;
 			direction.setText("<<<< ESQUERDA!");
 			client.sendTurn(POSITION_LEFT);
-		} else if (lastPos != POSITION_CENTER){
+		} else if (lastPos != POSITION_CENTER && ((0-TRESHOLD)<=value) && (value<=TRESHOLD)){
+			lastPos = POSITION_CENTER;
 			direction.setText("PARADO");
 			client.sendTurn(POSITION_CENTER);
 		}
