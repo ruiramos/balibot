@@ -1,5 +1,9 @@
-var players = new Array(4);
+var MAX_PLAYERS = 6;
+var players = new Array(MAX_PLAYERS);
 
+/***************
+* Player class
+****************/
 var Player = function(socket, imei, name) {
   this.imei = imei;
   this.socket = socket;
@@ -15,16 +19,18 @@ Player.prototype.getName = function() {
   return this.name;
 }
 
+/**************************
+* Playermanager functions
+**************************/
 exports.addPlayer = function(socket, imei, name) {
   var player = new Player(socket, imei, name);
   for (var i=0; i<players.length; i++) {
-    var p = players[i];
-    if (p == null) {
+    if (players[i] == null) {
       console.log("Adding player "+player.getName());
       players[i] = player;
       return;
-    } else if (p.getSocket()==null || p.getSocket().destroyed) {
-      console.log("Adding player "+player.getName()+" on previous slot.");
+    } else if (players[i].getSocket()==null || players[i].getSocket().destroyed) {
+      console.log("Adding player "+player.getName()+" on previous slot: "+i);
       players[i] = player;
       return;
     } else {
