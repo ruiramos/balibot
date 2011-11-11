@@ -5,7 +5,7 @@ var app = require('express').createServer()
   , mongodb = require('mongodb')
   , mdns = require('node-bj');
 
-var ad = mdns.createAdvertisement('balibot', 27017);
+var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
 var playersCollection;
