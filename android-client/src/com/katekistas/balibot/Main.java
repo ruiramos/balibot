@@ -118,10 +118,18 @@ public class Main extends Activity {
   
 	public void serverFound() {
 		TextView server = (TextView) findViewById(R.id.server_text);
-		server.setText("Server '"+serverName+"' ("+serverAddress.getHostAddress()+": "+serverPort+")");
-		Button connect = (Button) findViewById(R.id.connect);
-		connect.setEnabled(true);
+		if (serverAddress != null) {
+			server.setText("Server '"+serverName+"' ("+serverAddress.getHostAddress()+": "+serverPort+")");
+			Button connect = (Button) findViewById(R.id.connect);
+			connect.setEnabled(true);
+		}
 		loading.dismiss();
+	}
+	
+	public void _rescan(View view) {
+		loading = ProgressDialog.show(this, "", "Looking for game server...", true);
+		FindServerTask task = new FindServerTask(false);
+		task.execute();
 	}
 	
 	public void _connect(View view) {
