@@ -5,7 +5,7 @@ var app = require('express').createServer()
   , mongodb = require('mongodb')
   , mdns = require('node-bj');
 
-var ad = mdns.createAdvertisement('balibot', 27017);
+var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
 var playersCollection;
@@ -22,11 +22,24 @@ app.get('/', function(req, res) {
 });
 
 io.sockets.on('connection', function (socket) {
-  console.log("Recebi connection! ->", socket.id);
-  socket.broadcast.emit("UTILIZADOR "+socket.id+" LIGOU-SE!");
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log("LOLAO", data);
+  
+  console.log("new browser client: ", socket.id);
+    
+  socket.emit('READY', { hello: 'server is ready and accepting clients' });
+
+  // possible messages:
+    //   player_added
+    //   game_started
+    //   player_dead
+    //   game_finished
+  socket.on('game_started', function (data) {
+    console.log("NEW GAME HAS STARTED", data);
+  });
+  socket.on('player_dead', function (data) {
+    console.log("A PLAYER HAS DIED", data);
+  });
+  socket.on('game_finished', function (data) {
+    console.log("THIS GAME HAS JUST FINISHED", data);
   });
 });
 
