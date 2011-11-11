@@ -1,11 +1,13 @@
 package com.katekistas.balibot;
 
 import android.app.Activity;
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -84,6 +86,8 @@ public class Main extends Activity implements SensorEventListener {
 			client.disconnect();
 		} else {
 			if (client.connect("192.168.1.87", 9090)) {
+				Vibrator vibrator =(Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+        vibrator.vibrate(400);
 				connect.setText("Disconnect");
 			}
 		}
