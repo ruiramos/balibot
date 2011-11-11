@@ -1,7 +1,15 @@
 var playerManager = require('./playermanager.js');
 
 var app = require('express').createServer()
-  , io = require('socket.io').listen(app);
+  , io = require('socket.io').listen(app)
+  , mongodb = require('mongodb');
+
+var playersCollection;
+
+var dbClient = new mongodb.Db('balibot', new mongodb.Server("127.0.0.1", 27017, {}), {}).open(function (error, client) {
+  if (error) throw error;
+  playersCollection = new mongodb.Collection(client, 'players');
+});
 
 app.listen(9091);
 
@@ -35,9 +43,24 @@ var server = net.createServer(function(socket) {
     if (type == TYPE_ID) {
       var imei = msg[1];
       var name = msg[2];
-      console.log("IMEI:"+msg[1]);
-      console.log("Nickname:"+msg[2]);
+      console.log("IMEI:"+imei);
+      console.log("Nickname:"+name);
       playerManager.addPlayer(socket, imei, name);
+
+      playersCollection.find({IMEI: imei}).toArray(function(err, results) {
+        console.log(err);
+        console.log(results);
+        // FIXME - ficar com user
+      });
+
+      //se nao existir na db - FIXME
+      playersCollection.insert({IMEI: imei, nick: name, score: 0}, {safe:true}, function(err, objects) {
+        if (err) console.warn(err.message);
+        if (err && err.message.indexOf('E11000 ') !== -1) {
+          console.log("duplicated id");
+        }
+      });
+
       console.log(playerManager.getPlayers());
     } else if (type == TYPE_POS) {
       console.log("Position change: "+msg[1]);
