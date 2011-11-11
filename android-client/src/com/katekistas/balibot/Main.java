@@ -1,83 +1,100 @@
 package com.katekistas.balibot;
 
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
+import javax.jmdns.ServiceListener;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.impl.JmDNSImpl;
+
 import android.app.Activity;
 import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
-public class Main extends Activity implements SensorEventListener {
+public class Main extends Activity {
+	private JmDNS jmdns;
+	MulticastLock lock;
+	protected ServiceListener listener;
+
 	private static final String TAG = "Main";
+	private static final String MDNS_TYPE = "_balibot._tcp.local.";
 	
-	public static final int POSITION_LEFT = 0;
-	public static final int POSITION_CENTER = 1;
-	public static final int POSITION_RIGHT = 2;
-	private int lastPos = POSITION_CENTER;
+	private Inet4Address serverAddress;
+	private int serverPort;
 	
-	private SensorManager mSensorManager;
-	private Sensor mAccelerometer;
-	
-	private Client client = new Client(this);
-	
-	private static int CONTROL_AXIS = SensorManager.AXIS_Y;
-	private static int TRESHOLD = 3;
+	private Client client = Client.getInstance();
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-    mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-    client.setName("Rikas");
+		client.setContext(this);
+		findServers();
+	}
+	
+	protected void onDestroy() {
+		super.onDestroy();
+		if (lock != null) lock.release();
 	}
 	
 	protected void onResume() {
-  	super.onResume();
-    mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-  }
-  
-  protected void onPause() {
-  	super.onPause();
-  	mSensorManager.unregisterListener(this);
+		super.onResume();
   }
 	
-	@Override
-	public void onAccuracyChanged(Sensor arg0, int arg1) {}
-
-	@Override
-	public void onSensorChanged(SensorEvent event) {
-		if (!client.isConnected()) {
-			Button connect = (Button) findViewById(R.id.connect);
-			if (connect.getText().equals("Disconnect")) {
-				connect.setText("Connect");
-			}
-			return;
-		}
-		
-		float value = event.values[CONTROL_AXIS-1];
-		TextView direction = (TextView) findViewById(R.id.direction);
-		if (value>TRESHOLD && lastPos != POSITION_RIGHT) {
-			lastPos = POSITION_RIGHT;
-			direction.setText("DIREITA! >>>> ");
-			client.sendTurn(POSITION_RIGHT);
-		} else if (value<(0-TRESHOLD) && lastPos != POSITION_LEFT) {
-			lastPos = POSITION_LEFT;
-			direction.setText("<<<< ESQUERDA!");
-			client.sendTurn(POSITION_LEFT);
-		} else if (lastPos != POSITION_CENTER && ((0-TRESHOLD)<=value) && (value<=TRESHOLD)){
-			lastPos = POSITION_CENTER;
-			direction.setText("PARADO");
-			client.sendTurn(POSITION_CENTER);
-		}
+	protected void onPause() {
+		super.onPause();
 	}
 	
+	public void findServers() {
+		try {
+			WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+			lock = wifi.createMulticastLock("HeeereDnssdLock");
+			lock.setReferenceCounted(true);
+			lock.acquire();
+			
+			jmdns = JmDNS.create();
+			jmdns.addServiceListener(MDNS_TYPE, listener = new ServiceListener() {
+				public void serviceAdded(ServiceEvent event) {
+					Log.v(TAG, "Service added: "+event.getName()+"."+event.getType());
+				}
+				public void serviceRemoved(ServiceEvent event) {
+					Log.v(TAG, "Service removed: "+event.getName()+"."+event.getType());
+				}
+				public void serviceResolved(ServiceEvent event) {
+					Log.v(TAG, "Service resolved: " + event.getInfo());
+				}
+			});
+			ServiceInfo[] infos = jmdns.list(MDNS_TYPE);
+			if (infos != null && infos.length > 0) {
+				for (int i=0; i<infos.length; i++) {
+					serverAddress = infos[i].getInet4Addresses()[0];
+					serverPort = infos[i].getPort();
+					Log.d(TAG, "Encontrei "+serverAddress.getHostAddress()+" "+serverPort);
+				}
+			} else {
+				Log.d(TAG, "ENCONTREI NADA");
+			}
+			jmdns.removeServiceListener(MDNS_TYPE, listener);
+	    jmdns.close();
+	    
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+  
 	public void _connect(View view) {
 		Button connect = (Button) findViewById(R.id.connect);
 		// Already connected -> Disconnect
@@ -85,8 +102,8 @@ public class Main extends Activity implements SensorEventListener {
 			connect.setText("Connect");
 			client.disconnect();
 		} else {
-			if (client.connect("192.168.1.87", 9090)) {
-				Vibrator vibrator =(Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+			if (client.connect(serverAddress.getHostAddress(), serverPort)) {
+				Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         vibrator.vibrate(400);
 				connect.setText("Disconnect");
 			}
