@@ -2,27 +2,25 @@ package com.katekistas.balibot;
 
 import java.io.IOException;
 import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Enumeration;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 import javax.jmdns.ServiceEvent;
-import javax.jmdns.impl.JmDNSImpl;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 public class Main extends Activity {
 	private JmDNS jmdns;
@@ -34,15 +32,19 @@ public class Main extends Activity {
 	
 	private Inet4Address serverAddress;
 	private int serverPort;
+	private String serverName;
 	
 	private Client client = Client.getInstance();
+	private ProgressDialog loading;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		client.setContext(this);
-		findServers();
+		loading = ProgressDialog.show(this, "", "Looking for game server...", true);
+		FindServerTask task = new FindServerTask(false);
+		task.execute();
 	}
 	
 	protected void onDestroy() {
@@ -82,19 +84,46 @@ public class Main extends Activity {
 				for (int i=0; i<infos.length; i++) {
 					serverAddress = infos[i].getInet4Addresses()[0];
 					serverPort = infos[i].getPort();
+					serverName = infos[i].getName();
 					Log.d(TAG, "Encontrei "+serverAddress.getHostAddress()+" "+serverPort);
+					jmdns.removeServiceListener(MDNS_TYPE, listener);
+			    jmdns.close();
 				}
 			} else {
 				Log.d(TAG, "ENCONTREI NADA");
 			}
-			jmdns.removeServiceListener(MDNS_TYPE, listener);
-	    jmdns.close();
-	    
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+	
+	private class FindServerTask extends AsyncTask<Void, Void, Void> {
+		public FindServerTask(boolean showLoading) {
+			super();
+		}
+		
+		protected Void doInBackground(Void... args) {
+			findServers();
+			Log.d(TAG, "FINISHED FINDING SERVER");
+			return null;
+		}
+		
+		protected void onProgressUpdate(Void... unused) {
+		}
+		protected void onPostExecute(Void result) {
+			Log.d(TAG, "FINISH SERVER FIND");
+			serverFound();
+		}
+	}
   
+	public void serverFound() {
+		TextView server = (TextView) findViewById(R.id.server_text);
+		server.setText("Server '"+serverName+"' ("+serverAddress.getHostAddress()+": "+serverPort+")");
+		Button connect = (Button) findViewById(R.id.connect);
+		connect.setEnabled(true);
+		loading.dismiss();
+	}
+	
 	public void _connect(View view) {
 		Button connect = (Button) findViewById(R.id.connect);
 		// Already connected -> Disconnect
@@ -102,10 +131,15 @@ public class Main extends Activity {
 			connect.setText("Connect");
 			client.disconnect();
 		} else {
+			EditText name = (EditText) findViewById(R.id.name);
+			client.setName(name.getText().toString());
+			Log.d(TAG, "Vou connectar a: "+serverAddress.getHostAddress()+": "+serverPort);
 			if (client.connect(serverAddress.getHostAddress(), serverPort)) {
 				Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         vibrator.vibrate(400);
 				connect.setText("Disconnect");
+			} else {
+				Log.d(TAG, "FAIL DE CONNECT!");
 			}
 		}
 	}
