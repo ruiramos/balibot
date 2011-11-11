@@ -2,7 +2,11 @@ var playerManager = require('./playermanager.js');
 
 var app = require('express').createServer()
   , io = require('socket.io').listen(app)
-  , mongodb = require('mongodb');
+  , mongodb = require('mongodb')
+  , mdns = require('node-bj');
+
+var ad = mdns.createAdvertisement('balibot', 27017);
+ad.start();
 
 var playersCollection;
 
