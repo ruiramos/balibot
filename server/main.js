@@ -1,3 +1,5 @@
+var playerManager = require('./playermanager.js');
+
 var app = require('express').createServer()
   , io = require('socket.io').listen(app);
 
@@ -27,14 +29,18 @@ var TYPE_POS = "pos";
 
 var server = net.createServer(function(socket) {
   socket.on('data', function(data) {
-    var message = message = data.toString('utf8', 0, data.length).split(":");
-    var type = message[0];
+    var msg = data.toString('utf8', 0, data.length).split(":");
+    var type = msg[0];
     
     if (type == TYPE_ID) {
-      console.log("IMEI:"+message[1]);
-      console.log("Nickname:"+message[2]);
+      var imei = msg[1];
+      var name = msg[2];
+      console.log("IMEI:"+msg[1]);
+      console.log("Nickname:"+msg[2]);
+      playerManager.addPlayer(socket, imei, name);
+      console.log(playerManager.getPlayers());
     } else if (type == TYPE_POS) {
-      console.log("Position change: "+message[1]);
+      console.log("Position change: "+msg[1]);
     } else {
       console.log("Unknown message type from client! (cheater?)");
     }
@@ -42,7 +48,7 @@ var server = net.createServer(function(socket) {
 });
 
 server.on('connection', function(socket) {
-  console.log("CONNECTION!");
+  console.log("NEW CONNECTION!");
 });
 
 server.listen(9090);

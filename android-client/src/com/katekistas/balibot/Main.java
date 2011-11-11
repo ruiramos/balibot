@@ -83,7 +83,7 @@ public class Main extends Activity implements SensorEventListener {
 			connect.setText("Connect");
 			client.disconnect();
 		} else {
-			if (client.connect("176.78.12.110", 9090)) {
+			if (client.connect("192.168.1.87", 9090)) {
 				connect.setText("Disconnect");
 			}
 		}
