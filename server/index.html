@@ -1,0 +1,16 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect('http://localhost');
+  socket.on('news', function (data) {
+    console.log("LOLADA -->", data);
+    socket.emit('my other event', { my: 'viva amigos' });
+  });
+</script>
+</head>
+<body>
+  <h1>BaliBot</h1>
+</body>
+</html>
