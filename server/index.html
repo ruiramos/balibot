@@ -14,8 +14,39 @@
     socket.emit('game_started', { hello: 'viva amigos!' });
   });
 </script>
+
+
+<script>
+var context;
+var x=100;
+var y=100;
+var dx=2;
+var dy=2;
+var radius=5;
+
+function init()
+{
+  context= myCanvas.getContext('2d');
+  setInterval(draw,20);
+}
+
+function draw()
+{
+  context.beginPath();
+  context.fillStyle="#0000ff";
+  // Draws a circle of radius 20 at the coordinates 100,100 on the canvas
+  context.arc(x,y,radius,0,Math.PI*2,true);
+  context.closePath();
+  context.fill();
+  x+=dx;
+  y+=dy;
+}
+</script>
+
 </head>
-<body>
+<body onLoad="init();">
   <h1>BaliBot</h1>
+
+  <canvas id="myCanvas" width="500" height="400"></canvas>
 </body>
 </html>
