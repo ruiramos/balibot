@@ -1,0 +1,5 @@
+.classpath
+.DS_Store
+.project
+android-client/bin
+android-client/gen
