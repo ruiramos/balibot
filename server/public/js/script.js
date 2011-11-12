@@ -298,12 +298,29 @@ var game = Game || {};
           
           //init 
           drawLobbyScreen();
-          
-        };
-  
-        init();      
-    
-})(Game);
 
+
+          var socket = io.connect();           
+           
+          socket.on('ready', function (data) {
+          console.log("SERVER IS READY, ", data);
+            // possible messages:
+            //   player_added
+            //   game_started
+            //   player_dead
+            //   game_finished
+          socket.emit('game_started', { hello: 'viva amigos!' });
+          });
+        
+          socket.on('join', function (player) {
+            console.log("PLAYER HAS JOINED: ", player.name);
+            //... adicionar o player ...
+            socket.emit('color', { id: player.imei, color: "#FF0000" });
+          });
+        }
+        
+        init();
+             
+})(Game);
 
 });

@@ -5,15 +5,15 @@ var playerManager = require('./playermanager.js');
 var codebots = require('./codebots.js');
 
 var express = require('express')
-  , io = require('socket.io').listen(app)
   , mongodb = require('mongodb')
   , mdns = require('node-bj')
-  , app = express.createServer();
+  , app = express.createServer()
+  , io = require('socket.io').listen(app);
 
 var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
-var browserSocket;
+var browserSocket = 40; // isto não é quarenta
 
 var server = new mongodb.Server("127.0.0.1", 27017, {});
 var playersCollection;
@@ -23,6 +23,7 @@ new mongodb.Db('balibot', server, {}).open(function (error, client) {
   
   playersCollection = new mongodb.Collection(client, 'players');
 });
+
 
 app.configure(function(){
   app.use(express.static(__dirname + '/public'));
@@ -37,7 +38,7 @@ io.sockets.on('connection', function (socket) {
   browserSocket = socket;
   
   console.log("new browser client: ", socket.id);
-  socket.emit('READY', { hello: 'server is ready and accepting clients' });
+  socket.emit('ready', { hello: 'server is ready and accepting clients' });
   // possible messages:
     //   player_added
     //   game_started
@@ -83,8 +84,9 @@ var server = net.createServer(function(socket) {
 
       var playerOnTheDB;
 
-      console.log("!!!!! NEW USER COMING IN !!!!!");
-
+      console.log(browserSocket);
+      console.log(this.browserSocket);
+      
       browserSocket.emit('join', {name: name});
 
       playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
