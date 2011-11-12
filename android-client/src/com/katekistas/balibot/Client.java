@@ -1,5 +1,6 @@
 package com.katekistas.balibot;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -7,13 +8,18 @@ import java.net.UnknownHostException;
 
 import android.content.Context;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
-public class Client {	
+public class Client {
+	private final static String TAG = "Client";
+	
 	private boolean connected = false;
 	private Socket socket = null;
+	private Thread receiverThread;
 	private String name;
 	
 	private DataOutputStream output;
+	private DataInputStream input;
 	
 	private Context mContext;
 	private static Client instance = null;
@@ -35,6 +41,7 @@ public class Client {
 		try {
 			socket = new Socket(ip, port);
 			output = new DataOutputStream(socket.getOutputStream());
+			input = new DataInputStream(socket.getInputStream());
 			output.writeBytes("id:"+getIMEI()+":"+name);
 			connected = true;
 		} catch (UnknownHostException e) {
@@ -74,6 +81,25 @@ public class Client {
 			stopTurn();
 			break;
 		}
+	}
+	
+	public void receive() {
+		String data;
+		receiverThread = new Thread(new Runnable() {
+      public void run() {
+      	Log.d(TAG, "Running thread");
+        while (!Thread.interrupted()) {
+          try {
+          	Log.d(TAG, "Dentro do try");
+            data = input.readLine();
+            if (data != null) {
+            	Log.d(TAG, "RECEBI DATA!: "+data);
+            }
+          } catch (IOException e) { e.printStackTrace();}
+        }
+      }
+    });
+		receiverThread.start();
 	}
 	
 	private void turnLeft() {

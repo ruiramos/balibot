@@ -11,6 +11,7 @@ import javax.jmdns.ServiceEvent;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
 import android.os.AsyncTask;
@@ -86,12 +87,12 @@ public class Main extends Activity {
 					serverPort = infos[i].getPort();
 					serverName = infos[i].getName();
 					Log.d(TAG, "Encontrei "+serverAddress.getHostAddress()+" "+serverPort);
-					jmdns.removeServiceListener(MDNS_TYPE, listener);
-			    jmdns.close();
 				}
 			} else {
 				Log.d(TAG, "ENCONTREI NADA");
 			}
+			jmdns.removeServiceListener(MDNS_TYPE, listener);
+	    jmdns.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -146,6 +147,8 @@ public class Main extends Activity {
 				Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         vibrator.vibrate(400);
 				connect.setText("Disconnect");
+				Intent gameIntent = new Intent(this, Game.class);
+				this.startActivity(gameIntent);
 			} else {
 				Log.d(TAG, "FAIL DE CONNECT!");
 			}
