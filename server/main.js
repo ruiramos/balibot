@@ -53,12 +53,17 @@ io.sockets.on('connection', function (socket) {
     if(player!=null){
       player.send("color:"+data.color);
       player.send("started:"+data.started);
-    } else console.log("o player é null!!!!!!!!!!!! --------------- 54");
+    } else console.log("o player é null!!!!!!!!!!!! --------------- color,54");
     
   });
   
-  socket.on('player_dead', function (data) {
-    console.log("A PLAYER HAS DIED", data);
+  socket.on('die', function (data) {
+    p = playerManager.findByImei(data.playerImei);
+    if(p!=null) 
+      p.send("die"); 
+    else
+      console.log("o player é null!!!!!!!!!!!! --------------- die,65, "+data.playerImei);
+        
   });
 
   socket.on('game_finished', function (data) {
@@ -163,6 +168,8 @@ var server = net.createServer(function(socket) {
     
     playerManager.clearDeadPeople();
   });
+  
+  
   /*
   socket.on('end', function(data) {
     console.log("Disconnected - end");   

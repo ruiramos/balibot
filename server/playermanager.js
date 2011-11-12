@@ -58,6 +58,12 @@ exports.addPlayer = function(socket, imei, name) {
 
 exports.findByImei = function(imei) {
   for (var i=0; i<players.length; i++) {
+    if(players[i]==null){ 
+      players.splice(i,1);
+      continue;
+    }
+    console.log(":: "+players[i].name + " - "+players[i].imei);
+    
     if (players[i] != null && players[i].isConnected()) {
       if (players[i].imei == imei) {
         return players[i];
@@ -86,7 +92,7 @@ exports.findDisconnected = function(){
 exports.clearDeadPeople = function(){
   for (var i=0; i<players.length; i++) {
     if (players[i] != null && players[i].socket.destroyed) {
-      delete players[i];
+      players.splice(i,1);
     }
   }  
 }

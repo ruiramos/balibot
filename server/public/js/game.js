@@ -24,7 +24,7 @@ var Game = function(canvasID, canvasWidth, canvasHeight , useFullscreen ) {
 	
     this.playerManager = new PlayerManager();
     this.engine = new Engine(this.drawingContext, this.playerManager.players);
-	this.engineOnHalt = false;
+	  this.engineOnHalt = false;
 };
 
 Game.prototype.getDrawingContext = function() {

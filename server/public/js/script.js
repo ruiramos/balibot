@@ -23,6 +23,7 @@ var game = Game || {};
         playerImeiToId = [],
         i,
         j,
+        socket,
         pendingPlayers = [],
         controls=0,
         player,
@@ -83,6 +84,15 @@ var game = Game || {};
             controls++;
             console.log('add player');
         },
+        handlePlayerDeath = function(playerID){
+            for(i=0; i<players.length;i++)
+              if(players[i].ID == playerID){
+                socket.emit('die', {playerImei: players[i].imei});
+                console.log("------------ morreu o :"+players[i].name);
+                break;
+              }
+          
+        }
         handleRoundEnd = function(statistics) {
             game.stop();
             clearInterval(processCurrentDirectionsIntervalID);
@@ -153,21 +163,21 @@ var game = Game || {};
           drawingContext.fillStyle = "#368b37";
           drawingContext.fillRect(0, 0, Config.canvasWidth, Config.canvasHeight);
           
-          var startY = 140;
-          var startX = 160;
+          var startY = 150;
+          var startX = 0;
           
           drawingContext.fillStyle = "#38b95a";
           drawingContext.fillRect(startX+50, startY, Config.canvasWidth, 25);
           
           var img = new Image();
           img.onload = function(){
-            drawingContext.drawImage(img,startX,startY-75);
+            drawingContext.drawImage(img,startX-10,startY-75);
           };
           img.src = '/bot.png';
           
           
-          startYt = (domCanvas.clientHeight / 2)+25;
-          startXt =  200;
+          startYt = (domCanvas.clientHeight / 2)+35;
+          startXt =  30;
           
           drawingContext.font = "90px 'bitween 10'";
           drawingContext.textAlign = 'left';
@@ -186,11 +196,11 @@ var game = Game || {};
           //draw players
           
           drawingContext.fillStyle = "#368b37";
-        	drawingContext.fillRect(1000, 100, Config.canvasWidth, Config.canvasHeight);
+        	drawingContext.fillRect(700, 100, Config.canvasWidth, Config.canvasHeight);
           drawingContext.fillStyle = "white";
           
-          var startYp = 160;
-          var startXp = 1050;
+          var startYp = 170;
+          var startXp = 750;
           drawingContext.font = "18px 'Commodore 64 Pixelized'";
           drawingContext.textAlign = 'left';
           drawingContext.fillText(game.activePlayers() + " players", startXp-2, startYp);
@@ -413,12 +423,13 @@ var game = Game || {};
           domStartGameButton.disable = true;
           
           game.setRoundCallback(handleRoundEnd);
+          game.setCollisionCallback(handlePlayerDeath);
           
           //init 
           drawLobbyScreen();
           game.startSession();
 
-          var socket = io.connect();           
+          socket = io.connect();           
            
           socket.on('ready', function (data) {
           console.log("SERVER IS READY, ", data);
@@ -445,10 +456,13 @@ var game = Game || {};
           });
         
           socket.on('pos', function (data) {
-            if(playerImeiToId[data.imei] >= 0)
-              setCurrentDirection(playerImeiToId[data.imei], data.pos);       
+            imei = data.imei;
+            imei = imei.replace("pos","");
+            
+            if(playerImeiToId[imei] >= 0)
+              setCurrentDirection(playerImeiToId[imei], data.pos);       
             else
-              console.log("MEGA BODE!!!!!!!!!!!! " + data.imei);
+              console.log("MEGA BODE!!!!!!!!!!!! " + imei);
           });
           
           socket.on('bot', function (data) {
