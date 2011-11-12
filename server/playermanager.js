@@ -58,6 +58,7 @@ exports.findByImei = function(imei) {
       }
     }
   }
+  return null;
 }
 
 exports.getPlayers = function() {
