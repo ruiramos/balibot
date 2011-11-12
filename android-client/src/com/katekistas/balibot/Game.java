@@ -6,16 +6,19 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 
 public class Game extends Activity implements SensorEventListener {
+	private static final String TAG = "Game";
+	
 	public static final int POSITION_LEFT = 0;
 	public static final int POSITION_CENTER = 1;
 	public static final int POSITION_RIGHT = 2;
 	private int lastPos = POSITION_CENTER;
 	
 	private static int CONTROL_AXIS = SensorManager.AXIS_Y;
-	private static int TRESHOLD = 3;
+	private static float TRESHOLD = 2.5f;
 	
 	private Client client = Client.getInstance();
 	
@@ -26,6 +29,9 @@ public class Game extends Activity implements SensorEventListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.game);
+		mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+    mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		client.receive();
 	}
 	
 	protected void onResume() {

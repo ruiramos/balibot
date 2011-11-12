@@ -55,6 +55,7 @@ var util = require('util');
 // Message types
 var TYPE_ID = "id";
 var TYPE_POS = "pos";
+var TYPE_COLOR = "color";
 
 var server = net.createServer(function(socket) {
   socket.on('data', function(data) {
@@ -103,12 +104,10 @@ var server = net.createServer(function(socket) {
           console.log("no user, just inserted it: " + playerOnTheDB);
         }
       });
-
-      socket.write('{message:"welcome", color: "red"}');
-
-      console.log(playerManager.getPlayers());
     } else if (type == TYPE_POS) {
       console.log("Position change: "+msg[1]);
+      console.log("Vou enviar mensagem ao cabrao!");
+      socket.write("color:#ff6677\n");
     } else {
       console.log("Unknown message type from client! (cheater?)");
     }
