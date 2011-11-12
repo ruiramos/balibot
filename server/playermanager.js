@@ -11,7 +11,7 @@ var Player = function(socket, imei, name) {
   this.points = 0;
 }
 
-Player.prototype.send(message) {
+Player.prototype.send = function(message) {
   if (this.socket != null && this.isConnected()) {
     this.socket.write(message+"\n");
   }
