@@ -9,7 +9,7 @@ var express = require('express')
   , mongodb = require('mongodb')
   , mdns = require('node-bj')
   , app = express.createServer();
-  
+
 var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
