@@ -20,6 +20,7 @@ var game = Game || {};
         scoreList = [],
         roundResult = [],
         gameStarted = false,
+        playerImeiToId = [],
         i,
         j,
         pendingPlayers = [],
@@ -53,14 +54,14 @@ var game = Game || {};
                 inUse: false
             }
         ],
-        game = new Game(canvasID, 600, 600, false),
+        game = new Game(canvasID, 600, 600, true),
         drawingContext = game.getDrawingContext(),
         setCurrentDirection = function(playerID, direction) {
             currentDirections[playerID] = direction;   
         },
         
         // *** HANDLERS ***
-        handleKeyUp = function(event) {
+        /*handleKeyUp = function(event) {
             if (keysInUse[event.keyCode]) {
                 setCurrentDirection(keysInUse[event.keyCode].playerID, 0);
                 keyPressCount++;
@@ -70,11 +71,8 @@ var game = Game || {};
             if (keysInUse[event.keyCode]) {
                 setCurrentDirection(keysInUse[event.keyCode].playerID, keysInUse[event.keyCode].direction);
             }
-        },
+        },*/
         handleStartGameClick = function() {
-            domCanvas.className = 'show';
-            //domStartGameButton.onclick = function(){gameStarted = true; game.restart()};
-
             gameStarted = true;
             game.start();
             game.startSession();
@@ -147,24 +145,37 @@ var game = Game || {};
           var startX = (domCanvas.clientWidth / 2);
           
           drawingContext.fillStyle = "white";
-          drawingContext.fillText(players.length + " players connected", startX, startY);
+          drawingContext.fillText(game.activePlayers() + " players connected", startX, startY);
 
         },   
         
-        addPlayer = function(name, imei, controlID) {
+        addPlayer = function(name, imei) {
             player = {};
+                        
+            if( (id = playerImeiToId[imei]) >= 0){ 
+              game.activatePlayer(id);
+              players[id].isPlaying = true;
+              player.color = game.playerManager.getNewPlayerColor(id);
+              updatePlayerList();
+              
+              return player;
+            }
 
             player.ID = game.addPlayer(name);
+            player.imei = imei;
+            playerImeiToId[player.imei] = player.ID;
+            
             player.name = name;
             player.color = game.playerManager.getPlayerColor(player.ID);
-            player.controlID = controlID;
+            player.controlID = 0;
             player.points = 0;
             player.isPlaying = true;
             players.push(player);
+            updatePlayerList();            
+            
             
             if(!gameStarted){
-              activateControls(player.ID, controlID);
-              updatePlayerList();            
+              activateControls(player.ID, player.controlID);
             } else {
               player.isPlaying = false;
               pendingPlayers.push(player);
@@ -174,9 +185,8 @@ var game = Game || {};
 
         },
         removePlayer = function(playerID) {
-          console.log('remove player - TODO!');
-            /*playerID = parseInt(playerID, 10);
-
+          console.log('remove player');
+          
             game.removePlayer(playerID);
             var index = -1;
 
@@ -187,16 +197,11 @@ var game = Game || {};
                 }
             }
 
-            delete keysInUse[listOfControls[players[i].controlID].leftKeyCode];
-            delete keysInUse[listOfControls[players[i].controlID].rightKeyCode];
-            delete currentDirections[playerID];
-            listOfControls[players[i].controlID].inUse = false;
-
+            currentDirections[playerID] = 0;
             players[index].isPlaying = false;
 
             //writePlayerControls();
-
-            updatePlayerList();*/
+            updatePlayerList();
         },
         
 
@@ -211,7 +216,7 @@ var game = Game || {};
             processCurrentDirectionsIntervalID = setInterval(processCurrentDirections, 1000 / numberOfDirectionProcessesPerSecond);
         },
         activateControls = function(playerID, controlID) {
-          
+          /*
           console.log('activateControls: '+playerID+" - "+controlID);
           
             keysInUse[listOfControls[controlID].leftKeyCode] = {
@@ -224,11 +229,12 @@ var game = Game || {};
                 direction: 1
             };
 
-            listOfControls[controlID].inUse = true;
+            listOfControls[controlID].inUse = true;*/
         },
         updatePlayerList = function() {
-            drawLobbyScreen();
-            console.log('update player list - TODO');
+          if(gameStarted) return;
+          drawLobbyScreen();
+          console.log('update player list - TODO');
             
            /* if (players.length) {
                 domPlayerListContainer.className = 'show';
@@ -255,7 +261,7 @@ var game = Game || {};
             }*/
         },
         getNumberOfUnusedControls = function() {
-            numberOfUnusedControls = 0;
+           /* numberOfUnusedControls = 0;
 
             for (i = 0; i < listOfControls.length; i++) {
                 if (!listOfControls[i].inUse) {
@@ -263,7 +269,7 @@ var game = Game || {};
                 }
             }
 
-            return numberOfUnusedControls;
+            return numberOfUnusedControls;*/
         },
         checkPlayerLimit = function() {
             /*if (getNumberOfUnusedControls()) {
@@ -289,8 +295,8 @@ var game = Game || {};
         init = function() {
           
           //handlers
-          window.onkeydown = handleKeyDown;
-          window.onkeyup = handleKeyUp;  
+          //window.onkeydown = handleKeyDown;
+          //window.onkeyup = handleKeyUp;  
 
           domAddPlayerButton.onclick = handleAddPlayerClick;
           domStartGameButton.onclick = handleStartGameClick;
@@ -317,8 +323,27 @@ var game = Game || {};
           socket.on('join', function (player) {
             console.log("PLAYER HAS JOINED: ", player.name);
             p = addPlayer(player.name, player.imei);
-            socket.emit('color', { id: player.imei, color: p.color });
+            console.log('sending: '+ player.imei +" , "+ p.color );
+            
+            socket.emit('color', { imei: player.imei, color: p.color });
           });
+        
+          socket.on('pos', function (data) {
+            setCurrentDirection(playerImeiToId[data.imei], data.pos);                        
+          });
+        
+          socket.on('close', function (data) {
+            console.log('Disconnected player '+data.imei);
+            removePlayer(playerImeiToId[data.imei]);                        
+          });
+          
+          socket.on('startgame', function (data) {
+            if(!gameStarted)
+              handleStartGameClick();
+          });
+          
+          
+        
         }
         
         init();
