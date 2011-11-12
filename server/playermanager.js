@@ -11,12 +11,23 @@ var Player = function(socket, imei, name) {
   this.points = 0;
 }
 
+Player.prototype.isConnected = function() {
+  if (this.socket == null) {
+    return false;
+  }
+  return !this.socket.destroyed();
+}
+
 Player.prototype.getSocket = function() {
   return this.socket;
 }
 
 Player.prototype.getName = function() {
   return this.name;
+}
+
+Player.prototype.getIMEI = function() {
+  return this.imei;
 }
 
 /**************************
@@ -29,7 +40,7 @@ exports.addPlayer = function(socket, imei, name) {
       console.log("Adding player "+player.getName());
       players[i] = player;
       return;
-    } else if (players[i].getSocket()==null || players[i].getSocket().destroyed) {
+    } else if (players[i].getSocket()==null || players[i].isConnected()) {
       console.log("Adding player "+player.getName()+" on previous slot: "+i);
       players[i] = player;
       return;
@@ -38,6 +49,16 @@ exports.addPlayer = function(socket, imei, name) {
     }
   }
 };
+
+exports.findByImei = function(imei) {
+  for (var i=0; i<players.length; i++) {
+    if (players[i] != null && players[i].isConnected()) {
+      if (players[i].imei == imei) {
+        return players[i];
+      }
+    }
+  }
+}
 
 exports.getPlayers = function() {
   return players;
