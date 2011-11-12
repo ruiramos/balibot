@@ -12,6 +12,8 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
 import android.os.AsyncTask;
@@ -31,7 +33,7 @@ public class Main extends Activity {
 	private static final String TAG = "Main";
 	private static final String MDNS_TYPE = "_balibot._tcp.local.";
 	
-	private Inet4Address serverAddress;
+	private String serverAddress;
 	private int serverPort;
 	private String serverName;
 	
@@ -43,9 +45,45 @@ public class Main extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		client.setContext(this);
-		loading = ProgressDialog.show(this, "", "Looking for game server...", true);
-		FindServerTask task = new FindServerTask(false);
-		task.execute();
+		
+		Typeface tf = Typeface.createFromAsset(getAssets(), "bitwa.ttf");
+    TextView title = (TextView)findViewById(R.id.title);
+    title.setIncludeFontPadding(false);
+    title.setLineSpacing(0.0f, 1f);
+    title.setTypeface(tf);
+    
+    Typeface commodore = Typeface.createFromAsset(getAssets(), "commodore.ttf");
+    TextView serverTxt = (TextView)findViewById(R.id.server_text);
+    serverTxt.setIncludeFontPadding(false);
+    serverTxt.setLineSpacing(0.0f, 1f);
+    serverTxt.setTypeface(commodore);
+    
+		// Restore preferences
+    SharedPreferences settings = getSharedPreferences("katekistas", 0);
+    String name = settings.getString("name", "");
+    String savedAddress = settings.getString("s_address", "");
+    int savedPort = settings.getInt("s_port", 0);
+    String savedName = settings.getString("s_name", "");
+    
+    // Already have name, hide editbox
+    if (!name.equals("")) {
+    	EditText nameEdit = (EditText) findViewById(R.id.name);
+    	nameEdit.setText(name);
+    	nameEdit.setVisibility(View.INVISIBLE);
+			client.setName(name);
+    }
+		
+    // Already have server
+    if (!savedAddress.equals("")) {
+    	serverAddress = savedAddress;
+    	serverPort = savedPort;
+    	serverName = savedName;
+    	serverFound();
+    } else {
+    	loading = ProgressDialog.show(this, "", "Looking for game server...", true);
+    	FindServerTask task = new FindServerTask(false);
+    	task.execute();
+    }
 	}
 	
 	protected void onDestroy() {
@@ -59,6 +97,14 @@ public class Main extends Activity {
 	
 	protected void onPause() {
 		super.onPause();
+		EditText nameEdit = (EditText) findViewById(R.id.name);
+		SharedPreferences settings = getSharedPreferences("katekistas", 0);
+    SharedPreferences.Editor editor = settings.edit();
+    editor.putString("name", nameEdit.getText().toString());
+    editor.putString("s_address", serverAddress);
+    editor.putInt("s_port", serverPort);
+    editor.putString("s_name", serverName);
+    editor.commit();
 	}
 	
 	public void findServers() {
@@ -83,10 +129,10 @@ public class Main extends Activity {
 			ServiceInfo[] infos = jmdns.list(MDNS_TYPE);
 			if (infos != null && infos.length > 0) {
 				for (int i=0; i<infos.length; i++) {
-					serverAddress = infos[i].getInet4Addresses()[0];
+					serverAddress = infos[i].getInet4Addresses()[0].getHostAddress();
 					serverPort = infos[i].getPort();
 					serverName = infos[i].getName();
-					Log.d(TAG, "Encontrei "+serverAddress.getHostAddress()+" "+serverPort);
+					Log.d(TAG, "Encontrei "+serverAddress+" "+serverPort);
 				}
 			}
 			Log.d(TAG, "Removendo o listener de MDNS");
@@ -118,11 +164,13 @@ public class Main extends Activity {
 	public void serverFound() {
 		TextView server = (TextView) findViewById(R.id.server_text);
 		if (serverAddress != null) {
-			server.setText("Server '"+serverName+"' ("+serverAddress.getHostAddress()+": "+serverPort+")");
+			server.setText("Server '"+serverName+"' ("+serverAddress+":"+serverPort+")");
 			Button connect = (Button) findViewById(R.id.connect);
 			connect.setEnabled(true);
 		}
-		loading.dismiss();
+		if (loading != null) {
+			loading.dismiss();
+		}
 	}
 	
 	public void _rescan(View view) {
@@ -140,8 +188,8 @@ public class Main extends Activity {
 		} else {
 			EditText name = (EditText) findViewById(R.id.name);
 			client.setName(name.getText().toString());
-			Log.d(TAG, "Vou connectar a: "+serverAddress.getHostAddress()+": "+serverPort);
-			if (client.connect(serverAddress.getHostAddress(), serverPort)) {
+			Log.d(TAG, "Vou connectar a: "+serverAddress+": "+serverPort);
+			if (client.connect(serverAddress, serverPort)) {
 				Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         vibrator.vibrate(400);
 				connect.setText("Disconnect");

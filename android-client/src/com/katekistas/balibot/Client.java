@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -69,21 +71,29 @@ public class Client {
 		this.name = name;
 	}
 	
-	public void sendTurn(int direction) {
-		switch(direction) {
-		case Game.POSITION_LEFT:
-			turnLeft();
-			break;
-		case Game.POSITION_RIGHT:
-			turnRight();
-			break;
-		case Game.POSITION_CENTER:
-			stopTurn();
-			break;
+	public String getName() {
+		return name;
+	}
+	
+	public void sendTurn(float direction) {
+		try {
+			output.writeBytes("pos:"+direction+":"+getIMEI());
+		} catch (IOException e) {
+			e.printStackTrace();
+			disconnect();
 		}
 	}
 	
-	public void receive(final Game game) {
+	public void sendStart() {
+		try {
+			output.writeBytes("go:"+getIMEI());
+		} catch (IOException e) {
+			e.printStackTrace();
+			disconnect();
+		}
+	}
+	
+	public void receive(final Handler mHandler) {
 		receiverThread = new Thread(new Runnable() {
       public void run() {
         while (!Thread.interrupted()) {
@@ -94,7 +104,9 @@ public class Client {
             }
             // Received DATA
             if (data != null) {
-            	game.onReceive(data);
+            	Message msg = new Message();
+              msg.obj = data;
+              mHandler.sendMessage(msg);
             }
           } catch (IOException e) {
           	Thread.currentThread().interrupt();
@@ -104,33 +116,6 @@ public class Client {
       }
     });
 		receiverThread.start();
-	}
-	
-	private void turnLeft() {
-		try {
-			output.writeBytes("pos:"+Game.POSITION_LEFT+":"+getIMEI());
-		} catch (IOException e) {
-			e.printStackTrace();
-			disconnect();
-		}
-	}
-	
-	private void turnRight() {
-		try {
-			output.writeBytes("pos:"+Game.POSITION_RIGHT+":"+getIMEI());
-		} catch (IOException e) {
-			e.printStackTrace();
-			disconnect();
-		}
-	}
-	
-	private void stopTurn() {
-		try {
-			output.writeBytes("pos:"+Game.POSITION_CENTER+":"+getIMEI());
-		} catch (IOException e) {
-			e.printStackTrace();
-			disconnect();
-		}
 	}
 	
 	private String getIMEI() {
