@@ -6,6 +6,7 @@ var Player = function() {
     this.name = '';
     this.color = '';
     this.ID = null;
+    this.imei = 0;
 	this.distance = 0;
 	this.isPlaying = false;
 	this.isAlive = false;
