@@ -2,8 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical" 
+    android:background="#368b37"
+    android:padding="20dip">
 
+		<TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="BaliBot"
+        android:textColor="#ffffff"
+        android:textSize="50dip"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
     <TextView
         android:id="@+id/server_text"
         android:layout_width="wrap_content"
