@@ -31,7 +31,7 @@ public class Game extends Activity implements SensorEventListener {
 		setContentView(R.layout.game);
 		mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
     mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		client.receive();
+		client.receive(this);
 	}
 	
 	protected void onResume() {
@@ -68,5 +68,9 @@ public class Game extends Activity implements SensorEventListener {
 			lastPos = POSITION_CENTER;
 			client.sendTurn(POSITION_CENTER);
 		}
+	}
+	
+	public void onReceive(String data) {
+		Log.d(TAG, "received: "+data);
 	}
 }
