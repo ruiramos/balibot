@@ -1,10 +1,11 @@
 var playerManager = require('./playermanager.js');
 
-var app = require('express').createServer()
+var express = require('express')
   , io = require('socket.io').listen(app)
   , mongodb = require('mongodb')
-  , mdns = require('node-bj');
-
+  , mdns = require('node-bj')
+  , app = express.createServer();
+  
 var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
@@ -18,9 +19,11 @@ new mongodb.Db('balibot', server, {}).open(function (error, client) {
   playersCollection = new mongodb.Collection(client, 'players');
 });
 
+app.configure(function(){
+  app.use(express.static(__dirname + '/public'));
+});
 
 app.listen(9091);
-
 app.get('/', function(req, res) {
   res.sendfile(__dirname + '/index.html');
 });

@@ -1,52 +1,20 @@
 <html>
 <head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io.connect('ws://localhost');
-  socket.on('READY', function (data) {
-    console.log("SERVER IS READY, ", data);
-    // possible messages:
-    //   player_added
-    //   game_started
-    //   player_dead
-    //   game_finished
-    socket.emit('game_started', { hello: 'viva amigos!' });
-  });
-</script>
-
-
-<script>
-var context;
-var x=100;
-var y=100;
-var dx=2;
-var dy=2;
-var radius=5;
-
-function init()
-{
-  context= myCanvas.getContext('2d');
-  setInterval(draw,20);
-}
-
-function draw()
-{
-  context.beginPath();
-  context.fillStyle="#0000ff";
-  // Draws a circle of radius 20 at the coordinates 100,100 on the canvas
-  context.arc(x,y,radius,0,Math.PI*2,true);
-  context.closePath();
-  context.fill();
-  x+=dx;
-  y+=dy;
-}
-</script>
-
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>index</title>
+	<script src="/js/jquery.js"></script>
+	<script src="/js/colormanager.js"></script>
+	<script src="/js/config.js"></script>
+	<script src="/js/engine.js"></script>
+	<script src="/js/game.js"></script>
+	<script src="/js/player.js"></script>
+	<script src="/js/playermanager.js"></script>
+	<script src="/js/utilities.js"></script>
+	<script src="/js/script.js"></script>
+  
 </head>
-<body onLoad="init();">
-  <h1>BaliBot</h1>
-
-  <canvas id="myCanvas" width="500" height="400"></canvas>
+<body id="index" onload="">
+	<canvas id="canvas" style="background:black"></canvas>
+	<p><input type="button" name="Add Player" value="Add Player" id="addplayer"><input type="button" name="Start Game" value="Start Game" id="startgame"></p>
 </body>
 </html>
