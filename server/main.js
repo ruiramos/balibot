@@ -58,8 +58,27 @@ io.sockets.on('connection', function (socket) {
   socket.on('player_dead', function (data) {
     console.log("A PLAYER HAS DIED", data);
   });
+
   socket.on('game_finished', function (data) {
     console.log("THIS GAME HAS JUST FINISHED", data);
+    for(int i=0;i<=data.scores.length;i++){
+      var player = data.scores[i];
+      playersCollection.find({IMEI: player.imei}, {limit:1}).toArray(function(err, results) {
+        if(err){
+          console.log("BODE GRANDE: " + err);
+        }
+      
+        if(results.length > 0){
+          playerOnTheDB = results[0];
+        }
+
+        playersCollection.findAndModify({IMEI: player.imei}, [['_id','asc']], {$set: {high_score: player.score}}, {limit:1},
+          function(err, object) {
+            if (err) console.warn(err.message);
+            else console.dir(object);  // undefined if no matching object exists.
+          });
+      });
+    }
   });
 });
 
