@@ -165,7 +165,7 @@ Game.prototype.drawPlayer = function(x, y, player) {
   img.onload = function(){
    that.drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
   }
-  img.src = /*player.bot_url*/ false || '/bot.png';
+  img.src = '/bots/'+player.name+".png";
   
   this.drawingContext.fillStyle = player.color;
 	this.drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
@@ -189,7 +189,7 @@ Game.prototype.drawInactivePlayer = function(x, y, player) {
   img.onload = function(){
    that.drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
   }
-  img.src = /*player.bot_url*/ false || '/bot.png';
+  img.src = '/bots/'+player.name+".png";
   
   this.drawingContext.fillStyle = player.color;
 	this.drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);

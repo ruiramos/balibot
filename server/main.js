@@ -115,7 +115,7 @@ var server = net.createServer(function(socket) {
       console.log("Nickname:"+name);
       playerManager.addPlayer(socket, imei, name);
 
-      codebots.usernameToBot(name, function(bot_url) {
+      codebots.downloadBotForUser(name, function(bot_url) {
         socket.write("bot:"+bot_url+"\n");
         browserSocket.emit('bot', {imei: imei, bot_url:bot_url});
       });

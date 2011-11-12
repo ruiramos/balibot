@@ -7,8 +7,8 @@ var game = Game || {};
 (function(Game) {
     var canvasID = 'canvas',
         domCanvas = document.getElementById(canvasID),
-        domStartGameButton = document.getElementById('startgame'),
-        domAddPlayerButton = document.getElementById('addplayer'),
+ //       domStartGameButton = document.getElementById('startgame'),
+//        domAddPlayerButton = document.getElementById('addplayer'),
         minimalPlayerNameLength = 2,
         keysInUse = {},
         currentDirections = {},
@@ -163,7 +163,7 @@ var game = Game || {};
           drawingContext.fillStyle = "#368b37";
           drawingContext.fillRect(0, 0, Config.canvasWidth, Config.canvasHeight);
           
-          var startY = 150;
+          var startY = 100;
           var startX = 0;
           
           drawingContext.fillStyle = "#38b95a";
@@ -199,7 +199,7 @@ var game = Game || {};
         	drawingContext.fillRect(700, 100, Config.canvasWidth, Config.canvasHeight);
           drawingContext.fillStyle = "white";
           
-          var startYp = 170;
+          var startYp = 120;
           var startXp = 750;
           drawingContext.font = "18px 'Commodore 64 Pixelized'";
           drawingContext.textAlign = 'left';
@@ -224,7 +224,7 @@ var game = Game || {};
           img.onload = function(){
             drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
           };
-          img.src = '/bot.png';
+          img.src = '/bots/'+player.name+".png";
           
           drawingContext.fillStyle = player.color;
         	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
@@ -245,7 +245,7 @@ var game = Game || {};
           img.onload = function(){
             drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
           };
-          img.src = /*player.bot_url*/ false || '/codebitsbot.png';
+          img.src = '/bots/'+player.name+".png";
           
           drawingContext.fillStyle = player.color;
         	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
@@ -418,9 +418,9 @@ var game = Game || {};
           //window.onkeydown = handleKeyDown;
           //window.onkeyup = handleKeyUp;  
 
-          domAddPlayerButton.onclick = handleAddPlayerClick;
-          domStartGameButton.onclick = handleStartGameClick;
-          domStartGameButton.disable = true;
+//          domAddPlayerButton.onclick = handleAddPlayerClick;
+//          domStartGameButton.onclick = handleStartGameClick;
+//          domStartGameButton.disable = true;
           
           game.setRoundCallback(handleRoundEnd);
           game.setCollisionCallback(handlePlayerDeath);
