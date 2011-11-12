@@ -86,33 +86,20 @@ public class Game extends Activity implements SensorEventListener {
 		
 		pitch = event.values[1];
 		
-		if (pitch<-13 && lastPos != POSITION_RIGHT) {
-			lastPos = POSITION_RIGHT;
-			client.sendTurn(POSITION_RIGHT);
-		} else if (pitch > 13 && lastPos != POSITION_LEFT) {
-			lastPos = POSITION_LEFT;
-			client.sendTurn(POSITION_LEFT);
-		} else if (lastPos != POSITION_CENTER && (pitch>=-13 && pitch<=13)) {
-			lastPos = POSITION_CENTER;
-			client.sendTurn(POSITION_CENTER);
-		}
-		
-		/*
-		float value = event.values[CONTROL_AXIS-1];
-		if (value>TRESHOLD && lastPos != POSITION_RIGHT) {
+		if (pitch<-TRESHOLD && lastPos != POSITION_RIGHT) {
 			lastPos = POSITION_RIGHT;
 			client.sendTurn(POSITION_RIGHT);
 			right.setAlpha(100);
-		} else if (value<(0-TRESHOLD) && lastPos != POSITION_LEFT) {
+		} else if (pitch > TRESHOLD && lastPos != POSITION_LEFT) {
 			lastPos = POSITION_LEFT;
-			left.setAlpha(100);
 			client.sendTurn(POSITION_LEFT);
-		} else if (lastPos != POSITION_CENTER && ((0-TRESHOLD)<=value) && (value<=TRESHOLD)){
+			left.setAlpha(100);
+		} else if (lastPos != POSITION_CENTER && (pitch>=-TRESHOLD && pitch<=TRESHOLD)) {
 			lastPos = POSITION_CENTER;
 			client.sendTurn(POSITION_CENTER);
 			right.setAlpha(50);
 			left.setAlpha(50);
-		}*/
+		}
 	}
 	
 	public void onReceive(String data) {
