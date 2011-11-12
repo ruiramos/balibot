@@ -33,6 +33,10 @@ PlayerManager.prototype.removePlayer = function(playerID) {
 	this.getPlayerByID(playerID).canceled = true;
 };
 
+PlayerManager.prototype.activatePlayer = function(playerID) {
+	this.getPlayerByID(playerID).canceled = false;
+};
+
 PlayerManager.prototype.initializePlayers = function() {
     for (var i = 0; i < this.players.length; i++) {
         var player = this.players[i];
@@ -49,10 +53,15 @@ PlayerManager.prototype.initializePlayers = function() {
 PlayerManager.prototype.getColor = function() {
     return this.colorManager.convertRGBToHex(this.colorManager.getColor());
 };
+PlayerManager.prototype.getNewPlayerColor = function(playerID) {
+    newColor = this.colorManager.convertRGBToHex(this.colorManager.getColor());
+    this.players[playerID].color = newColor;
+    return newColor;
+
+};
 
 PlayerManager.prototype.navigatePlayer = function(playerID, direction) {
     var player = this.getPlayerByID(playerID);
-
     player.navigate(direction);
 };
 
@@ -119,3 +128,4 @@ PlayerManager.prototype.getAlivePlayers = function() {
 	
 	return alivePlayers;
 };
+

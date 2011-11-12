@@ -51,6 +51,7 @@ io.sockets.on('connection', function (socket) {
     var player = playerManager.findByImei(data.imei);
     if(player!=null){
       player.send("color:"+data.color);
+      player.send("started:"+data.started);
     }
   });
   
@@ -70,10 +71,13 @@ var util = require('util');
 
 // Message types
 var TYPE_ID = "id";
+var TYPE_GO = "go";
 var TYPE_POS = "pos";
 var TYPE_COLOR = "color";
 
 var server = net.createServer(function(socket) {
+  
+  // on client data    
   socket.on('data', function(data) {
     var msg = data.toString('utf8', 0, data.length).split(":");
     var type = msg[0];
@@ -88,56 +92,61 @@ var server = net.createServer(function(socket) {
       codebots.usernameToBot(name, function(bot_url) {
         socket.write("bot:"+bot_url+"\n");
         browserSocket.emit('bot', {imei: imei, bot:bot_url});
-        //console.log(bot_url);
       });
 
       var playerOnTheDB;
+      browserSocket.emit('join', {name: name, imei: imei});
       
-      browserSocket.emit('join', {name: name});
-
       playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
 
-        if (docs.length > 0) {
-          playerOnTheDB = docs[0];
-          console.log("found player: " + playerOnTheDB);
-          console.log("WE HAVE USER IN MONGO");
-        } else {
-          console.log("WE HAVE NO USER IN MONGO");
+      if (docs.length > 0)
+        playerOnTheDB = docs[0];
           
-          playersCollection.insert({IMEI: imei, name: name, score: 0}, {safe:true}, function(err, objects) {
-            if (err) console.warn(err.message);
-            if (err && err.message.indexOf('E11000 ') !== -1) {
-              console.log("duplicated id");
-            }
-          });
-  
-          playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, results) {
-            if(err){
-              console.log("BODE GRANDE: " + err);
-            }
-  
-            console.log("found in mongo after inserting: " + results);
-  
-            if(results.length > 0){
-              playerOnTheDB = results[0];
-            }
-          });
-  
-          console.log("no user, just inserted it: " + playerOnTheDB);
+      playersCollection.insert({IMEI: imei, name: name, score: 0}, {safe:true}, function(err, objects) {
+        if (err) console.warn(err.message);
+        if (err && err.message.indexOf('E11000 ') !== -1) {
+          console.log("duplicated id");
         }
+      });
+      
+      playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, results) {
+        if(err){
+          console.log("BODE GRANDE: " + err);
+        }
+      
+        if(results.length > 0){
+          playerOnTheDB = results[0];
+        }
+      });
+      
       });
     } else if (type == TYPE_POS) {
       console.log("Position change: "+msg[1]);
-      console.log("Vou enviar mensagem ao cabrao!");
-      socket.write("color:#ff6677\n");
+      browserSocket.emit('pos', {imei: msg[2], pos: msg[1]});
+    } else if (type == TYPE_GO) {
+      console.log("Starting a new game");
+      browserSocket.emit('startgame');
     } else {
       console.log("Unknown message type from client! (cheater?)");
     }
   });
+  
+  // on disconnect
+  socket.on('close', function(data) {
+    console.log("Disconnected");   
+     
+    player = playerManager.findBySocket(socket);
+    if(player!=null)
+      browserSocket.emit('close', {imei: player.imei});
+  });
+  
+  
 });
 
 server.on('connection', function(socket) {
-  console.log("NEW CONNECTION!");
+  console.log("New Connection"); 
+   
+  
 });
 
 server.listen(9090);

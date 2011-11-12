@@ -67,6 +67,23 @@ exports.findByImei = function(imei) {
   return null;
 }
 
+exports.findBySocket = function(s) {
+  for (var i=0; i<players.length; i++) {
+    if (players[i].socket == s) {
+      return players[i];
+    }
+  }
+  
+  for (var i=0; i<players.length; i++) {
+    if (players[i].socket.destroyed) {
+      return players[i];
+    }
+  }
+  
+  return null;
+}
+
+
 exports.getPlayers = function() {
   return players;
 }

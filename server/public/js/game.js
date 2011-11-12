@@ -9,8 +9,8 @@ var Game = function(canvasID, canvasWidth, canvasHeight , useFullscreen ) {
     this.canvasElement = document.getElementById(canvasID);
 
     if (this.useFullscreen) {
-        Config.canvasWidth = window.innerWidth;
-        Config.canvasHeight = window.innerHeight;
+        Config.canvasWidth = window.innerWidth-30;
+        Config.canvasHeight = window.innerHeight-30;
     }
 
     this.canvasElement.width = Config.canvasWidth;
@@ -34,7 +34,7 @@ Game.prototype.getDrawingContext = function() {
 Game.prototype.start = function() {
 	this.clearFrame();
 	
-	if (this.playerManager.numberOfPlayers() < 2) {
+	if (this.playerManager.numberOfPlayers() < 1) {
 		this.engineOnHalt = true;
 		this.drawFrame();
 		return;
@@ -67,15 +67,24 @@ Game.prototype.addPlayer = function(name) {
 
 Game.prototype.removePlayer = function (playerID) {
 	this.playerManager.removePlayer(playerID);
-	
+	/*
 	if (this.playerManager.numberOfPlayersAlive() < 2) {
 		this.stop();
 
         if (this.engine.onRoundOver) {
             this.engine.onRoundOver();
         }
-	}
+	}*/
 };
+
+Game.prototype.activatePlayer = function (playerID) {
+  this.playerManager.activatePlayer(playerID);
+}
+
+Game.prototype.activePlayers = function (playerID) {
+  return this.playerManager.numberOfPlayers();
+}
+
 
 Game.prototype.handleControl = function(playerID, direction) {
     this.playerManager.navigatePlayer(playerID, direction);  
@@ -111,7 +120,7 @@ Game.prototype.stopSession = function() {
 
 Game.prototype.drawFrame = function () {
 	this.drawingContext.lineWidth = 10;
-	this.drawingContext.strokeStyle = "#E3D42E";
+	this.drawingContext.strokeStyle = "#368b37";
 	this.drawingContext.strokeRect(0, 0, Config.canvasWidth - 0, Config.canvasHeight - 0);
 };
 
