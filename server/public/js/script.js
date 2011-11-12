@@ -143,35 +143,76 @@ var game = Game || {};
           drawingContext.fillStyle = "#368b37";
           drawingContext.fillRect(0, 0, Config.canvasWidth, Config.canvasHeight);
           
-          drawingContext.font = "90px 'bitween 10'";
-          drawingContext.textAlign = 'center';
           var startY = 150;
-          var startX = (domCanvas.clientWidth / 2)-100;
+          var startX = 675;
           
           drawingContext.fillStyle = "#38b95a";
-          drawingContext.fillRect(0, startY-50, startX+450, 25);
+          drawingContext.fillRect(0, startY, startX+100, 25);
           
-          drawingContext.fillStyle = "white";
-          drawingContext.fillText("BALIBOT", startX, startY);
-                    
-          startX = (domCanvas.clientWidth / 2)+275;
           var img = new Image();
           img.onload = function(){
-            drawingContext.drawImage(img,startX,startY-115);
+            drawingContext.drawImage(img,startX,startY-75);
           };
           img.src = '/bot.png';
           
-          startYt = (domCanvas.clientHeight / 2)+30;
-          startXt =  (domCanvas.clientWidth / 2);
+          
+          startYt = (domCanvas.clientHeight / 2)+25;
+          startXt =  200;
+          
+          drawingContext.font = "90px 'bitween 10'";
+          drawingContext.textAlign = 'left';
+          drawingContext.fillStyle = "white";
+          drawingContext.fillText("BALIBOT", startXt, startYt);
+          
           drawingContext.font = "22px 'Commodore 64 Pixelized'";
-          drawingContext.textAlign = 'center';
           
-          drawingContext.fillText("Please connect controllers and press Start", startXt, startYt);
+          drawingContext.fillText("Please connect controllers and", startXt, startYt+40);
+          drawingContext.fillText("press Start button.", startXt, startYt+60);
           
-          drawingContext.fillText(game.activePlayers() + " players connected", startXt, startYt+30);
+          drawPlayers();
 
         },   
-        
+        drawPlayers = function(){
+          //draw players
+          
+          drawingContext.fillStyle = "#368b37";
+        	drawingContext.fillRect(1000, 100, Config.canvasWidth, Config.canvasHeight);
+          drawingContext.fillStyle = "white";
+          
+          var startYp = 150;
+          var startXp = 1050;
+          drawingContext.font = "18px 'Commodore 64 Pixelized'";
+          drawingContext.textAlign = 'left';
+          drawingContext.fillText(game.activePlayers() + " players", startXp, startYp);
+          startYp += 10;
+          
+          for(i=0;i<players.length;i++){
+            drawPlayer(startXp, startYp, players[i]);
+            startYp += 105;
+          }
+          
+        },
+        drawPlayer = function(x, y, player){
+          var playerSqWidth = 125;
+          var playerSqHeight = 100;
+      
+          drawingContext.fillStyle = "#38b95a";
+          drawingContext.fillRect(x, y, playerSqWidth, playerSqHeight);
+          
+          var img = new Image();
+          img.onload = function(){
+            drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
+          };
+          img.src = '/codebitsbot.png';
+          
+          drawingContext.fillStyle = player.color;
+        	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
+          drawingContext.fillStyle = "white";
+          drawingContext.font = "12px 'Commodore 64 Pixelized'";
+          drawingContext.textAlign = 'center';
+          drawingContext.fillText(player.name, x+playerSqWidth/2, y+playerSqHeight-5);
+          
+        },
         addPlayer = function(name, imei) {
             player = {};
                         
@@ -183,7 +224,7 @@ var game = Game || {};
               
               return player;
             }
-
+            
             player.ID = game.addPlayer(name);
             player.imei = imei;
             playerImeiToId[player.imei] = player.ID;
@@ -256,7 +297,7 @@ var game = Game || {};
         },
         updatePlayerList = function() {
           if(gameStarted) return;
-          drawLobbyScreen();
+          drawPlayers();
           console.log('update player list - TODO');
             
            /* if (players.length) {
@@ -344,9 +385,16 @@ var game = Game || {};
           });
         
           socket.on('join', function (player) {
-            console.log("PLAYER HAS JOINED: ", player.name);
-            p = addPlayer(player.name, player.imei);            
-            socket.emit('color', { imei: player.imei, color: p.color, started: gameStarted });
+            if(players.length==6) {
+              //cheio!
+              console.log("Server Cheio: ");
+              socket.emit('color', { imei: -1, color: "", started: true });
+
+            } else {
+              console.log("PLAYER HAS JOINED: ", player.name);
+              p = addPlayer(player.name, player.imei);            
+              socket.emit('color', { imei: player.imei, color: p.color, started: gameStarted });
+            }
           });
         
           socket.on('pos', function (data) {
