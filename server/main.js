@@ -48,7 +48,10 @@ io.sockets.on('connection', function (socket) {
     console.log("NEW GAME HAS STARTED", data);
   });
   socket.on('color', function (data) {
-    console.log("recebi a cor", data);
+    var player = playerManager.findByImei(data.imei);
+    if(player!=null){
+      player.send("color:"+data.color);
+    }
   });
   
   socket.on('player_dead', function (data) {
