@@ -1,5 +1,7 @@
 var playerManager = require('./playermanager.js');
 
+var codebots = require('./codebots.js');
+
 var app = require('express').createServer()
   , io = require('socket.io').listen(app)
   , mongodb = require('mongodb')
@@ -8,6 +10,7 @@ var app = require('express').createServer()
 var ad = mdns.createAdvertisement('balibot', 9090);
 ad.start();
 
+var browserSocket;
 
 var server = new mongodb.Server("127.0.0.1", 27017, {});
 var playersCollection;
@@ -26,6 +29,7 @@ app.get('/', function(req, res) {
 });
 
 io.sockets.on('connection', function (socket) {
+  browserSocket = socket;
   
   console.log("new browser client: ", socket.id);
     
@@ -67,6 +71,10 @@ var server = net.createServer(function(socket) {
       console.log("IMEI:"+imei);
       console.log("Nickname:"+name);
       playerManager.addPlayer(socket, imei, name);
+
+      codebots.usernameToBot(name, function(bot_url) {
+        console.log(bot_url);
+      });
 
       var playerOnTheDB;
 
