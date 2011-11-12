@@ -1,3 +1,6 @@
+/**************
+* Browser code
+***************/
 var playerManager = require('./playermanager.js');
 
 var codebots = require('./codebots.js');
@@ -32,9 +35,7 @@ io.sockets.on('connection', function (socket) {
   browserSocket = socket;
   
   console.log("new browser client: ", socket.id);
-    
   socket.emit('READY', { hello: 'server is ready and accepting clients' });
-
   // possible messages:
     //   player_added
     //   game_started
@@ -51,14 +52,16 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-//------------------------------------------------
-
+/*******************
+* Client code
+*******************/
 var net = require('net');
 var util = require('util');
 
 // Message types
 var TYPE_ID = "id";
 var TYPE_POS = "pos";
+var TYPE_COLOR = "color";
 
 var server = net.createServer(function(socket) {
   socket.on('data', function(data) {
@@ -80,13 +83,15 @@ var server = net.createServer(function(socket) {
 
       console.log("!!!!! NEW USER COMING IN !!!!!");
 
+      browserSocket.emit('join', {name: name});
+
       playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
 
-        if(docs.length > 0){
+        if (docs.length > 0) {
           playerOnTheDB = docs[0];
           console.log("found player: " + playerOnTheDB);
           console.log("WE HAVE USER IN MONGO");
-        }else{
+        } else {
           console.log("WE HAVE NO USER IN MONGO");
           
           playersCollection.insert({IMEI: imei, name: name, score: 0}, {safe:true}, function(err, objects) {
@@ -111,12 +116,10 @@ var server = net.createServer(function(socket) {
           console.log("no user, just inserted it: " + playerOnTheDB);
         }
       });
-
-      socket.write('{message:"welcome", color: "red"}');
-
-      console.log(playerManager.getPlayers());
     } else if (type == TYPE_POS) {
       console.log("Position change: "+msg[1]);
+      console.log("Vou enviar mensagem ao cabrao!");
+      socket.write("color:#ff6677\n");
     } else {
       console.log("Unknown message type from client! (cheater?)");
     }
