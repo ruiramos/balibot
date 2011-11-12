@@ -151,7 +151,7 @@ var game = Game || {};
 
         },   
         
-        addPlayer = function(name, imei) {
+        addPlayer = function(name, imei, controlID) {
             player = {};
 
             player.ID = game.addPlayer(name);
