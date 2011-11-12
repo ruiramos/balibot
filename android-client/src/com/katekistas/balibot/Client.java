@@ -24,8 +24,6 @@ public class Client {
 	private Context mContext;
 	private static Client instance = null;
 	
-	private static final String TYPE_COLOR = "color";
-	
 	public static Client getInstance() {
 		if (instance == null) {
 			instance = new Client();
@@ -98,7 +96,10 @@ public class Client {
             if (data != null) {
             	game.onReceive(data);
             }
-          } catch (IOException e) { e.printStackTrace();}
+          } catch (IOException e) {
+          	Thread.currentThread().interrupt();
+          	e.printStackTrace();
+          }
         }
       }
     });
@@ -107,7 +108,7 @@ public class Client {
 	
 	private void turnLeft() {
 		try {
-			output.writeBytes("pos:"+Game.POSITION_LEFT);
+			output.writeBytes("pos:"+Game.POSITION_LEFT+":"+getIMEI());
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -116,7 +117,7 @@ public class Client {
 	
 	private void turnRight() {
 		try {
-			output.writeBytes("pos:"+Game.POSITION_RIGHT);
+			output.writeBytes("pos:"+Game.POSITION_RIGHT+":"+getIMEI());
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();
@@ -125,7 +126,7 @@ public class Client {
 	
 	private void stopTurn() {
 		try {
-			output.writeBytes("pos:"+Game.POSITION_CENTER);
+			output.writeBytes("pos:"+Game.POSITION_CENTER+":"+getIMEI());
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnect();

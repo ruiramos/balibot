@@ -21,7 +21,7 @@ Player.prototype.isConnected = function() {
   if (this.socket == null) {
     return false;
   }
-  return !this.socket.destroyed();
+  return !this.socket.destroyed;
 }
 
 Player.prototype.getSocket = function() {

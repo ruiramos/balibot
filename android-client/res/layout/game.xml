@@ -2,5 +2,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:background="#0000ff"
+    android:id="@+id/game_layout">
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <ImageView
+            android:id="@+id/left_arrow_image"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_weight="0.40"
+            android:src="@drawable/arrow_left" />
+
+        <ImageView
+            android:id="@+id/imageView3"
+            android:layout_width="332dp"
+            android:layout_height="76dp"
+            android:src="@drawable/ic_launcher" />
+
+        <ImageView
+            android:id="@+id/right_arrow_image"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_weight="0.40"
+            android:src="@drawable/arrow_right" />
+
+    </LinearLayout>
+
 </LinearLayout>
