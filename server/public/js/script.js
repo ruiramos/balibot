@@ -112,7 +112,7 @@ var game = Game || {};
             setTimeout(function() {
               console.log(gameStarted);
                 if(!gameStarted) drawLobbyScreen();
-            }, 2500);
+            }, 3500);
         },
         handleRemovePlayerClick = function(event) {
             if (event.target.nodeName.toUpperCase() == 'SPAN') {
@@ -139,13 +139,36 @@ var game = Game || {};
           console.log('lobby');
           
           game.clearFrame();
-          drawingContext.font = "50px Georgia serif";
+          
+          drawingContext.fillStyle = "#368b37";
+          drawingContext.fillRect(0, 0, Config.canvasWidth, Config.canvasHeight);
+          
+          drawingContext.font = "90px 'bitween 10'";
           drawingContext.textAlign = 'center';
-          var startY = (domCanvas.clientHeight / 2);
-          var startX = (domCanvas.clientWidth / 2);
+          var startY = 150;
+          var startX = (domCanvas.clientWidth / 2)-100;
+          
+          drawingContext.fillStyle = "#38b95a";
+          drawingContext.fillRect(0, startY-50, startX+450, 25);
           
           drawingContext.fillStyle = "white";
-          drawingContext.fillText(game.activePlayers() + " players connected", startX, startY);
+          drawingContext.fillText("BALIBOT", startX, startY);
+                    
+          startX = (domCanvas.clientWidth / 2)+275;
+          var img = new Image();
+          img.onload = function(){
+            drawingContext.drawImage(img,startX,startY-115);
+          };
+          img.src = '/bot.png';
+          
+          startYt = (domCanvas.clientHeight / 2)+30;
+          startXt =  (domCanvas.clientWidth / 2);
+          drawingContext.font = "22px 'Commodore 64 Pixelized'";
+          drawingContext.textAlign = 'center';
+          
+          drawingContext.fillText("Please connect controllers and press Start", startXt, startYt);
+          
+          drawingContext.fillText(game.activePlayers() + " players connected", startXt, startYt+30);
 
         },   
         
@@ -322,10 +345,8 @@ var game = Game || {};
         
           socket.on('join', function (player) {
             console.log("PLAYER HAS JOINED: ", player.name);
-            p = addPlayer(player.name, player.imei);
-            console.log('sending: '+ player.imei +" , "+ p.color );
-            
-            socket.emit('color', { imei: player.imei, color: p.color });
+            p = addPlayer(player.name, player.imei);            
+            socket.emit('color', { imei: player.imei, color: p.color, started: gameStarted });
           });
         
           socket.on('pos', function (data) {

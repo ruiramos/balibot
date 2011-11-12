@@ -9,8 +9,8 @@ var Game = function(canvasID, canvasWidth, canvasHeight , useFullscreen ) {
     this.canvasElement = document.getElementById(canvasID);
 
     if (this.useFullscreen) {
-        Config.canvasWidth = window.innerWidth;
-        Config.canvasHeight = window.innerHeight;
+        Config.canvasWidth = window.innerWidth-30;
+        Config.canvasHeight = window.innerHeight-30;
     }
 
     this.canvasElement.width = Config.canvasWidth;
@@ -120,7 +120,7 @@ Game.prototype.stopSession = function() {
 
 Game.prototype.drawFrame = function () {
 	this.drawingContext.lineWidth = 10;
-	this.drawingContext.strokeStyle = "#E3D42E";
+	this.drawingContext.strokeStyle = "#368b37";
 	this.drawingContext.strokeRect(0, 0, Config.canvasWidth - 0, Config.canvasHeight - 0);
 };
 

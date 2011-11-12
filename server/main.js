@@ -51,6 +51,7 @@ io.sockets.on('connection', function (socket) {
     var player = playerManager.findByImei(data.imei);
     if(player!=null){
       player.send("color:"+data.color);
+      player.send("started:"+data.started);
     }
   });
   
@@ -70,19 +71,13 @@ var util = require('util');
 
 // Message types
 var TYPE_ID = "id";
+var TYPE_GO = "go";
 var TYPE_POS = "pos";
 var TYPE_COLOR = "color";
 
 var server = net.createServer(function(socket) {
   
-  socket.on('close', function(data) {
-    console.log("Disconnected");   
-     
-    player = playerManager.findBySocket(socket);
-    if(player!=null)
-      browserSocket.emit('close', {imei: player.imei});
-  });
-    
+  // on client data    
   socket.on('data', function(data) {
     var msg = data.toString('utf8', 0, data.length).split(":");
     var type = msg[0];
@@ -97,11 +92,11 @@ var server = net.createServer(function(socket) {
       codebots.usernameToBot(name, function(bot_url) {
         socket.write("bot:"+bot_url+"\n");
         browserSocket.emit('bot', {imei: imei, bot:bot_url});
-        //console.log(bot_url);
       });
 
       var playerOnTheDB;
       browserSocket.emit('join', {name: name, imei: imei});
+      
       playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
 
       if (docs.length > 0)
@@ -124,7 +119,7 @@ var server = net.createServer(function(socket) {
         }
       });
       
-      }});
+      });
     } else if (type == TYPE_POS) {
       console.log("Position change: "+msg[1]);
       browserSocket.emit('pos', {imei: msg[2], pos: msg[1]});
@@ -135,6 +130,17 @@ var server = net.createServer(function(socket) {
       console.log("Unknown message type from client! (cheater?)");
     }
   });
+  
+  // on disconnect
+  socket.on('close', function(data) {
+    console.log("Disconnected");   
+     
+    player = playerManager.findBySocket(socket);
+    if(player!=null)
+      browserSocket.emit('close', {imei: player.imei});
+  });
+  
+  
 });
 
 server.on('connection', function(socket) {
