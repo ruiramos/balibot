@@ -42,6 +42,7 @@ Game.prototype.start = function() {
 	
 	this.drawFrame();
 	this.playerManager.initializePlayers();
+	this.createPlayerBar();
 	this.engine.start();
 	this.engineOnHalt = false;
 };
@@ -127,4 +128,81 @@ Game.prototype.drawFrame = function () {
 Game.prototype.clearFrame = function () {
   this.drawingContext.clearRect(0, 0, Config.canvasWidth, Config.canvasHeight);
 };
+
+Game.prototype.createPlayerBar = function() {
+  this.drawingContext.fillStyle="#121212";
+  this.drawingContext.fillRect(Config.canvasWidth-120, 5, Config.canvasWidth-5, Config.canvasHeight-10);
+  
+  this.drawPlayers();
+}
+Game.prototype.drawPlayers = function() {
+  players = this.playerManager.getAlivePlayers();
+  var startX = Config.canvasWidth-110;
+  var startY = 10;  
+  
+  for(i=0;i<players.length;i++){
+     this.drawPlayer(startX, startY, this.playerManager.getPlayerByID(players[i]));
+    startY+=115;
+  } 
+  
+  deadPlayers = this.playerManager.getDeadPlayers();
+  for(i=0;i<deadPlayers.length;i++){
+     this.drawInactivePlayer(startX, startY, this.playerManager.getPlayerByID(deadPlayers[i]));
+    startY+=115;
+  } 
+
+  
+}
+Game.prototype.drawPlayer = function(x, y, player) {
+  console.log(player);
+  var playerSqWidth = 100;
+  var playerSqHeight = 100;
+
+ // drawingContext.fillStyle = "#38b95a";
+//  drawingContext.fillRect(x, y, playerSqWidth, playerSqHeight);
+  var that = this;
+  var img = new Image();
+  img.onload = function(){
+   that.drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
+  }
+  img.src = /*player.bot_url*/ false || '/bot.png';
+  
+  this.drawingContext.fillStyle = player.color;
+	this.drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
+  this.drawingContext.fillStyle = "white";
+  this.drawingContext.font = "12px 'Commodore 64 Pixelized'";
+  this.drawingContext.textAlign = 'center';
+  this.drawingContext.fillText(player.name + " ("+this.playerManager.getPlayerWins(player.ID)+")", x+playerSqWidth/2, y+playerSqHeight-5);
+
+}
+
+Game.prototype.drawInactivePlayer = function(x, y, player) {
+  console.log(player);
+  var playerSqWidth = 100;
+  var playerSqHeight = 100;
+
+  this.drawingContext.fillStyle = "#999999";
+  this.drawingContext.fillRect(x, y, playerSqWidth, playerSqHeight);
+  
+  var that = this;
+  var img = new Image();
+  img.onload = function(){
+   that.drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
+  }
+  img.src = /*player.bot_url*/ false || '/bot.png';
+  
+  this.drawingContext.fillStyle = player.color;
+	this.drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
+  this.drawingContext.fillStyle = "white";
+  this.drawingContext.font = "12px 'Commodore 64 Pixelized'";
+  this.drawingContext.textAlign = 'center';
+  this.drawingContext.fillText(player.name, x+playerSqWidth/2, y+playerSqHeight-5);
+
+}
+
+
+Game.prototype.setPlayerBot = function(id, bot){
+  this.playerManager.getPlayerByID(id).bot_url = bot;
+} 
+
 

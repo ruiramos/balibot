@@ -14,6 +14,7 @@ var Player = function() {
 	this.hole = 0;
 	this.holeTimeoutID;
 	this.wins = 0;
+	this.bot_url = "";
 	
 	this.calculateNextHole();
 };

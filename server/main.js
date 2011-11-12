@@ -49,10 +49,12 @@ io.sockets.on('connection', function (socket) {
   });
   socket.on('color', function (data) {
     var player = playerManager.findByImei(data.imei);
+    
     if(player!=null){
       player.send("color:"+data.color);
       player.send("started:"+data.started);
-    }
+    } else console.log("o player é null!!!!!!!!!!!! --------------- 54");
+    
   });
   
   socket.on('player_dead', function (data) {
@@ -61,7 +63,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('game_finished', function (data) {
     console.log("THIS GAME HAS JUST FINISHED", data);
-    for(int i=0;i<=data.scores.length;i++){
+    for(i=0;i<=data.scores.length;i++){
       var player = data.scores[i];
       playersCollection.find({IMEI: player.imei}, {limit:1}).toArray(function(err, results) {
         if(err){
@@ -110,7 +112,7 @@ var server = net.createServer(function(socket) {
 
       codebots.usernameToBot(name, function(bot_url) {
         socket.write("bot:"+bot_url+"\n");
-        browserSocket.emit('bot', {imei: imei, bot:bot_url});
+        browserSocket.emit('bot', {imei: imei, bot_url:bot_url});
       });
 
       var playerOnTheDB;
@@ -154,10 +156,33 @@ var server = net.createServer(function(socket) {
   socket.on('close', function(data) {
     console.log("Disconnected");   
      
+    player = playerManager.findDisconnected();
+    if(player!=null)
+      browserSocket.emit('close', {imei: player.imei});
+    else console.log("could not disconnect, can't find socket");
+    
+    playerManager.clearDeadPeople();
+  });
+  /*
+  socket.on('end', function(data) {
+    console.log("Disconnected - end");   
+     
     player = playerManager.findBySocket(socket);
     if(player!=null)
       browserSocket.emit('close', {imei: player.imei});
+    else console.log("could not disconnect, can't find socket")
   });
+  
+  socket.on('timeout', function(data) {
+    console.log("Disconnected - timeout");   
+     
+    player = playerManager.findBySocket(socket);
+    if(player!=null)
+      browserSocket.emit('close', {imei: player.imei});
+    else console.log("could not disconnect, can't find socket")
+  });
+  */
+  
   
   
 });

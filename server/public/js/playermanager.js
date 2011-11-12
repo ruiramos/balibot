@@ -62,7 +62,10 @@ PlayerManager.prototype.getNewPlayerColor = function(playerID) {
 
 PlayerManager.prototype.navigatePlayer = function(playerID, direction) {
     var player = this.getPlayerByID(playerID);
-    player.navigate(direction);
+    if(player!=null)
+      player.navigate(direction);
+    else
+      console.log("bode no navigate... " +playerID);
 };
 
 PlayerManager.prototype.numberOfPlayersAlive = function() {
@@ -128,4 +131,19 @@ PlayerManager.prototype.getAlivePlayers = function() {
 	
 	return alivePlayers;
 };
+
+PlayerManager.prototype.getDeadPlayers = function() {
+	var deadPlayers = [];
+	
+	for (var i = 0; i < this.players.length; i++) {
+        console.log("deadPlayersSearch: "+this.players[i].name+" "+this.players[i].isAlive);
+        if (!this.players[i].isAlive) {
+            deadPlayers.push(this.players[i].ID);
+        }
+    }
+	
+	return deadPlayers;
+};
+
+
 

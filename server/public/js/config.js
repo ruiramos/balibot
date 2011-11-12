@@ -6,7 +6,7 @@ var Config = {
 
     frameRate: 100,         // rendering: frames per second
     pixelsPerSecond: 80,   // pixels per second
-    holeSize: 10,           // the size of the holes in pixels
+    holeSize: 20,           // the size of the holes in pixels
     threshold: 100,
 
     colorSaturation: 0.99,

@@ -69,21 +69,27 @@ exports.findByImei = function(imei) {
 
 exports.findBySocket = function(s) {
   for (var i=0; i<players.length; i++) {
-    if (players[i].socket == s) {
+    if (players[i] != null && players[i].socket == s) {
       return players[i];
     }
   }
+}
   
+exports.findDisconnected = function(){
   for (var i=0; i<players.length; i++) {
-    if (players[i].socket.destroyed) {
+    if (players[i] != null && players[i].socket.destroyed) {
       return players[i];
     }
-  }
-  
-  return null;
+  }  
 }
 
-
+exports.clearDeadPeople = function(){
+  for (var i=0; i<players.length; i++) {
+    if (players[i] != null && players[i].socket.destroyed) {
+      delete players[i];
+    }
+  }  
+}
 exports.getPlayers = function() {
   return players;
 }

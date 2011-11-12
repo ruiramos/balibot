@@ -75,7 +75,6 @@ var game = Game || {};
         handleStartGameClick = function() {
             gameStarted = true;
             game.start();
-            game.startSession();
             clearInterval(processCurrentDirectionsIntervalID);
             startCurrentDirectionsProcess();
         },
@@ -86,6 +85,7 @@ var game = Game || {};
         },
         handleRoundEnd = function(statistics) {
             game.stop();
+            clearInterval(processCurrentDirectionsIntervalID);
             console.log('roundEnd');
             saveEndscreen();
             roundResult = statistics.rank;
@@ -98,12 +98,16 @@ var game = Game || {};
 
             //updatePlayerList();
             drawEndScreen();
+            gameStarted = false;
+            
             
             // pending players
             if(pendingPlayers.length > 0){
               $.each(pendingPlayers, function(i, player){
                 activateControls(player.ID, player.controlID);
-                player.isPlaying = true;
+                players[player.ID].isPlaying = true;
+                players[player.ID].isActive = true;
+                
               });
               pendingPlayers = [];
             }
@@ -111,8 +115,10 @@ var game = Game || {};
             
             setTimeout(function() {
               console.log(gameStarted);
-                if(!gameStarted) drawLobbyScreen();
-            }, 3500);
+                if(!gameStarted){
+                  drawLobbyScreen();
+                } 
+            }, 2500);
         },
         handleRemovePlayerClick = function(event) {
             if (event.target.nodeName.toUpperCase() == 'SPAN') {
@@ -124,14 +130,18 @@ var game = Game || {};
         drawEndScreen = function() {
             console.log('end');
             
-            gameStarted = false;
-            drawingContext.font = "50px Georgia serif";
+            drawingContext.font = "70px 'Commodore 64 Pixelized'";
             drawingContext.textAlign = 'center';
             var start = (domCanvas.clientHeight / 2) - (50 * players.length) / 2;
+            
+            console.log(roundResult);
 
-            for (i = 0; i < roundResult.length; i++) {
+            for (i = 0, pos = 0; i < roundResult.length; i++) {
+              if(players[roundResult[i]]){
                 drawingContext.fillStyle = players[roundResult[i]].color;
-                drawingContext.fillText(i + 1 + '. ' + players[roundResult[i]].name, domCanvas.clientWidth / 2, start + i * 50);
+                drawingContext.fillText(pos + 1 + '. ' + players[roundResult[i]].name, domCanvas.clientWidth / 2, start + i * 50);
+                pos++;
+              }
             }
                         
         },   
@@ -143,11 +153,11 @@ var game = Game || {};
           drawingContext.fillStyle = "#368b37";
           drawingContext.fillRect(0, 0, Config.canvasWidth, Config.canvasHeight);
           
-          var startY = 150;
-          var startX = 675;
+          var startY = 140;
+          var startX = 160;
           
           drawingContext.fillStyle = "#38b95a";
-          drawingContext.fillRect(0, startY, startX+100, 25);
+          drawingContext.fillRect(startX+50, startY, Config.canvasWidth, 25);
           
           var img = new Image();
           img.onload = function(){
@@ -167,7 +177,7 @@ var game = Game || {};
           drawingContext.font = "22px 'Commodore 64 Pixelized'";
           
           drawingContext.fillText("Please connect controllers and", startXt, startYt+40);
-          drawingContext.fillText("press Start button.", startXt, startYt+60);
+          drawingContext.fillText("press the Start button!", startXt, startYt+62);
           
           drawPlayers();
 
@@ -179,15 +189,16 @@ var game = Game || {};
         	drawingContext.fillRect(1000, 100, Config.canvasWidth, Config.canvasHeight);
           drawingContext.fillStyle = "white";
           
-          var startYp = 150;
+          var startYp = 160;
           var startXp = 1050;
           drawingContext.font = "18px 'Commodore 64 Pixelized'";
           drawingContext.textAlign = 'left';
-          drawingContext.fillText(game.activePlayers() + " players", startXp, startYp);
-          startYp += 10;
+          drawingContext.fillText(game.activePlayers() + " players", startXp-2, startYp);
+          startYp += 15;
           
           for(i=0;i<players.length;i++){
-            drawPlayer(startXp, startYp, players[i]);
+            if(players[i].isActive) drawPlayer(startXp, startYp, players[i]);
+            //else drawInactivePlayer(startXp, startYp, players[i]);
             startYp += 105;
           }
           
@@ -203,7 +214,7 @@ var game = Game || {};
           img.onload = function(){
             drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
           };
-          img.src = '/codebitsbot.png';
+          img.src = '/bot.png';
           
           drawingContext.fillStyle = player.color;
         	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
@@ -213,16 +224,45 @@ var game = Game || {};
           drawingContext.fillText(player.name, x+playerSqWidth/2, y+playerSqHeight-5);
           
         },
+        drawInactivePlayer = function(x, y, player){
+          var playerSqWidth = 125;
+          var playerSqHeight = 100;
+      
+          drawingContext.fillStyle = "#aeaeae";
+          drawingContext.fillRect(x, y, playerSqWidth, playerSqHeight);
+          
+          var img = new Image();
+          img.onload = function(){
+            drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
+          };
+          img.src = /*player.bot_url*/ false || '/codebitsbot.png';
+          
+          drawingContext.fillStyle = player.color;
+        	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
+          drawingContext.fillStyle = "white";
+          drawingContext.font = "12px 'Commodore 64 Pixelized'";
+          drawingContext.textAlign = 'center';
+          drawingContext.fillText(player.name, x+playerSqWidth/2, y+playerSqHeight-5);
+          
+        }, 
+        setPlayerBot = function(imei, bot_url){
+          if( (id = playerImeiToId[imei]) >= 0){ 
+            players[id].bot_url = bot_url;
+            game.setPlayerBot(id, bot_url);
+          }
+        }       
         addPlayer = function(name, imei) {
             player = {};
                         
+                        
             if( (id = playerImeiToId[imei]) >= 0){ 
+              console.log(players[id].name);
               game.activatePlayer(id);
+              players[id].isActive = true;
               players[id].isPlaying = true;
-              player.color = game.playerManager.getNewPlayerColor(id);
+              players[id].color = game.playerManager.getNewPlayerColor(id);
               updatePlayerList();
-              
-              return player;
+              return players[id];
             }
             
             player.ID = game.addPlayer(name);
@@ -234,16 +274,20 @@ var game = Game || {};
             player.controlID = 0;
             player.points = 0;
             player.isPlaying = true;
-            players.push(player);
-            updatePlayerList();            
             
             
             if(!gameStarted){
               activateControls(player.ID, player.controlID);
+              player.isActive = true;
             } else {
               player.isPlaying = false;
               pendingPlayers.push(player);
             }
+            
+            players.push(player);
+            updatePlayerList();            
+            if(gameStarted) game.drawPlayers();
+            
             
             return player;
 
@@ -263,6 +307,8 @@ var game = Game || {};
 
             currentDirections[playerID] = 0;
             players[index].isPlaying = false;
+            players[index].isActive = false;
+            
 
             //writePlayerControls();
             updatePlayerList();
@@ -370,7 +416,7 @@ var game = Game || {};
           
           //init 
           drawLobbyScreen();
-
+          game.startSession();
 
           var socket = io.connect();           
            
@@ -394,12 +440,21 @@ var game = Game || {};
               console.log("PLAYER HAS JOINED: ", player.name);
               p = addPlayer(player.name, player.imei);            
               socket.emit('color', { imei: player.imei, color: p.color, started: gameStarted });
+              console.log("SENT COLOR: "+p.color);
             }
           });
         
           socket.on('pos', function (data) {
-            setCurrentDirection(playerImeiToId[data.imei], data.pos);                        
+            if(playerImeiToId[data.imei] >= 0)
+              setCurrentDirection(playerImeiToId[data.imei], data.pos);       
+            else
+              console.log("MEGA BODE!!!!!!!!!!!! " + data.imei);
           });
+          
+          socket.on('bot', function (data) {
+            //setPlayerBot(data.imei, "http://codebits.eu"+data.bot_url);
+          });
+          
         
           socket.on('close', function (data) {
             console.log('Disconnected player '+data.imei);
