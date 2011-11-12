@@ -24,6 +24,8 @@ public class Client {
 	private Context mContext;
 	private static Client instance = null;
 	
+	private static final String TYPE_COLOR = "color";
+	
 	public static Client getInstance() {
 		if (instance == null) {
 			instance = new Client();
@@ -83,17 +85,18 @@ public class Client {
 		}
 	}
 	
-	public void receive() {
-		String data;
+	public void receive(final Game game) {
 		receiverThread = new Thread(new Runnable() {
       public void run() {
-      	Log.d(TAG, "Running thread");
         while (!Thread.interrupted()) {
           try {
-          	Log.d(TAG, "Dentro do try");
-            data = input.readLine();
+            final String data = input.readLine();
+            if (!isConnected()) {
+            	Thread.currentThread().interrupt();
+            }
+            // Received DATA
             if (data != null) {
-            	Log.d(TAG, "RECEBI DATA!: "+data);
+            	game.onReceive(data);
             }
           } catch (IOException e) { e.printStackTrace();}
         }

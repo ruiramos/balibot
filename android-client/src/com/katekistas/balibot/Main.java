@@ -88,9 +88,8 @@ public class Main extends Activity {
 					serverName = infos[i].getName();
 					Log.d(TAG, "Encontrei "+serverAddress.getHostAddress()+" "+serverPort);
 				}
-			} else {
-				Log.d(TAG, "ENCONTREI NADA");
 			}
+			Log.d(TAG, "Removendo o listener de MDNS");
 			jmdns.removeServiceListener(MDNS_TYPE, listener);
 	    jmdns.close();
 		} catch (IOException e) {
@@ -105,14 +104,13 @@ public class Main extends Activity {
 		
 		protected Void doInBackground(Void... args) {
 			findServers();
-			Log.d(TAG, "FINISHED FINDING SERVER");
 			return null;
 		}
 		
 		protected void onProgressUpdate(Void... unused) {
 		}
+		
 		protected void onPostExecute(Void result) {
-			Log.d(TAG, "FINISH SERVER FIND");
 			serverFound();
 		}
 	}
