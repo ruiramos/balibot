@@ -47,6 +47,10 @@ io.sockets.on('connection', function (socket) {
   socket.on('game_started', function (data) {
     console.log("NEW GAME HAS STARTED", data);
   });
+  socket.on('color', function (data) {
+    console.log("recebi a cor", data);
+  });
+  
   socket.on('player_dead', function (data) {
     console.log("A PLAYER HAS DIED", data);
   });
@@ -83,9 +87,6 @@ var server = net.createServer(function(socket) {
       });
 
       var playerOnTheDB;
-
-      console.log(browserSocket);
-      console.log(this.browserSocket);
       
       browserSocket.emit('join', {name: name});
 

@@ -151,7 +151,7 @@ var game = Game || {};
 
         },   
         
-        addPlayer = function(name, controlID) {
+        addPlayer = function(name, imei) {
             player = {};
 
             player.ID = game.addPlayer(name);
@@ -169,6 +169,8 @@ var game = Game || {};
               player.isPlaying = false;
               pendingPlayers.push(player);
             }
+            
+            return player;
 
         },
         removePlayer = function(playerID) {
@@ -314,8 +316,8 @@ var game = Game || {};
         
           socket.on('join', function (player) {
             console.log("PLAYER HAS JOINED: ", player.name);
-            //... adicionar o player ...
-            socket.emit('color', { id: player.imei, color: "#FF0000" });
+            p = addPlayer(player.name, player.imei);
+            socket.emit('color', { id: player.imei, color: p.color });
           });
         }
         
