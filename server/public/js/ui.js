@@ -7,9 +7,11 @@ Ui.fn = Ui.prototype;
 
 /**
 * Adds player to player list. This method only needs to receive a 
-* player object. The player will appear as a div on the player list.
+* player object. The second argument is true or false if the player
+* is playing or not. If not playing we'll just play with the divs alpha.
+* The player will appear as a div on the player list.
 */
-Ui.fn.addPlayer = function(player) {
+Ui.fn.addPlayer = function(player, isPlaying) {
   var mainDiv = document.createElement('div');
   var bot = document.createElement('img');
   var name = document.createElement('p');
@@ -31,6 +33,11 @@ Ui.fn.addPlayer = function(player) {
   $(mainDiv).addClass('player');
   $(mainDiv).append(bot).append(name).append(score);
   
+  // Player is not playing
+  if (!isPlaying) {
+    $(mainDiv).css('opacity', 0.4);
+  }
+
   $('#players').append($(mainDiv));
 };
 
@@ -116,3 +123,11 @@ Ui.fn.showScoreTable = function(scores, playerManager) {
 Ui.fn.hideScoreTable = function() {
   $('#endgamescores').hide();
 };
+
+/**
+* Activates all pending players (change the alpha)
+*/
+Ui.fn.activatePending = function() {
+  // Let's just put all the opacities to 1 :D
+  $('.player').css('opacity', 1);
+}

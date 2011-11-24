@@ -81,6 +81,10 @@ Game.prototype.handleControl = function(playerID, direction) {
   this.playerManager.navigatePlayer(playerID, direction);  
 };
 
+Game.prototype.activatePending = function() {
+  this.playerManager.activatePending();
+}
+
 Game.prototype.setCollisionCallback = function(callback) {
   this.engine.setCollisionCallback(callback);
 };

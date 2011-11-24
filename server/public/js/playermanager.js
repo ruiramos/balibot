@@ -36,6 +36,15 @@ PlayerManager.prototype.initializePlayers = function() {
   }
 };
 
+PlayerManager.prototype.activatePending = function() {
+  for (var i=0; i<this.players.length; i++) {
+    var player = this.players[i];
+    if (player.isPlaying == false) {
+      player.isPlaying = true;
+    }
+  }
+};
+
 PlayerManager.prototype.getPlayer = function(imei) {
   for (var i=0; i<this.players.length; i++) {
     var player = this.players[i];

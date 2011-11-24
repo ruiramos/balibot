@@ -9,8 +9,7 @@ var game = Game || {};
     currentDirections = {},
     numberOfDirectionProcessesPerSecond = 100,
     processCurrentDirectionsIntervalID,
-    gameStarted = false,
-    pendingPlayers = [];
+    gameStarted = false;
     
     // Let's expand the game container to maximum possible
     // excluding the player list. I'm saving 8 pxs for the
@@ -58,6 +57,10 @@ var game = Game || {};
         ui.updateScore(player);
       }
 
+      // Activate pending players
+      game.activatePending();
+      ui.activatePending();
+
       /* Pending players
       if (pendingPlayers.length > 0) {
         $.each(pendingPlayers, function(i, player) {
@@ -73,7 +76,7 @@ var game = Game || {};
           ui.toggleLobby();
           ui.hideScoreTable();
         }
-      }, 14500);
+      }, 6500);
     },
 
     /**
@@ -97,12 +100,12 @@ var game = Game || {};
       
       if (!gameStarted) {
         player.isActive = true;
+        ui.addPlayer(player, player.isPlaying);
       } else {
         player.isPlaying = false;
-        pendingPlayers.push(player);
+        ui.addPlayer(player, player.isPlaying);
       }
-      
-      ui.addPlayer(player);
+
       return player;
     },
     
@@ -140,7 +143,8 @@ var game = Game || {};
       addPlayer("braposo", 120312);
       addPlayer("tpinto", 12931);
       addPlayer("pelf", 23133);
-
+      startGame();
+      
       // Player joins
       socket.on('join', function (data) {
         var player = addPlayer(data.name, data.imei);
