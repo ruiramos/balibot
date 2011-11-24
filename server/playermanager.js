@@ -1,5 +1,5 @@
-var MAX_PLAYERS = 6;
-var players = new Array(MAX_PLAYERS);
+var MAX_PLAYERS = 2;
+var players = [];
 
 /***************
 * Player class
@@ -11,29 +11,19 @@ var Player = function(socket, imei, name) {
   this.points = 0;
 }
 
-Player.prototype.send = function(message) {
-  if (this.socket != null && this.isConnected()) {
+Player.fn = Player.prototype;
+
+Player.fn.send = function(message) {
+  if (this.socket != null && this.connected()) {
     this.socket.write(message+"\n");
   }
 }
 
-Player.prototype.isConnected = function() {
+Player.fn.connected = function() {
   if (this.socket == null) {
     return false;
   }
   return !this.socket.destroyed;
-}
-
-Player.prototype.getSocket = function() {
-  return this.socket;
-}
-
-Player.prototype.getName = function() {
-  return this.name;
-}
-
-Player.prototype.getIMEI = function() {
-  return this.imei;
 }
 
 /**************************
@@ -41,72 +31,45 @@ Player.prototype.getIMEI = function() {
 **************************/
 exports.addPlayer = function(socket, imei, name) {
   var player = new Player(socket, imei, name);
-  for (var i=0; i<players.length; i++) {
-    if (players[i] == null) {
-      console.log("Adding player "+player.getName());
-      players[i] = player;
-      return;
-    } else if (players[i].getSocket()==null || players[i].isConnected()) {
-      console.log("Adding player "+player.getName()+" on previous slot: "+i);
-      players[i] = player;
-      return;
-    } else {
-      // can't add more players!
-    }
+  if (players.length<MAX_PLAYERS) {
+    players.push(player);
+    return true;
+  } else {
+    console.log("Player list is full. Can't add more players!");
+    return false;
   }
 };
 
+exports.removePlayer = function(imei) {
+  for (var i=0; i<players.length; i++) {
+    var player = players[i];
+    if (player.imei == imei) {
+      players.splice(i, 1);
+      return true;
+    }
+  }
+  return false;
+}
+
 exports.findByImei = function(imei) {
   for (var i=0; i<players.length; i++) {
-    if(players[i]==null){ 
-      players.splice(i,1);
-      continue;
-    }
-    console.log(":: "+players[i].name + " - "+players[i].imei);
-    
-    if (players[i] != null && players[i].isConnected()) {
-      if (players[i].imei == imei) {
-        return players[i];
-      }
+    var player = players[i];
+    if (player.imei == imei) {
+      return player;
     }
   }
   return null;
 }
 
-exports.findBySocket = function(s) {
+exports.findClosed = function() {
   for (var i=0; i<players.length; i++) {
-    if (players[i] != null && players[i].socket == s) {
-      return players[i];
+    var player = players[i];
+    if (player.socket.destroyed) {
+      return player;
     }
   }
 }
-  
-exports.findDisconnected = function(){
-  for (var i=0; i<players.length; i++) {
-    if (players[i] != null && players[i].socket.destroyed) {
-      return players[i];
-    }
-  }  
-}
 
-exports.clearDeadPeople = function(){
-  for (var i=0; i<players.length; i++) {
-    if (players[i] != null && players[i].socket.destroyed) {
-      players.splice(i,1);
-    }
-  }  
-}
-exports.getPlayers = function() {
+exports.getAllPlayers = function() {
   return players;
 }
-exports.setPoints = function(points) {
-  m_points = points;
-}
-
-exports.getName = function() {
-  return m_name;
-}
-
-exports.getSocket = function() {
-  return m_socket;
-};

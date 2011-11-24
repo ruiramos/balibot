@@ -1,99 +1,83 @@
-/**************
-* Browser code
-***************/
+var HTTP_PORT = 9091;
+var CLIENT_PORT = 9090;
+
+/******************************************
+* Browser side code
+*******************************************/
 var playerManager = require('./playermanager.js');
 var codebots = require('./codebots.js');
 
 var express = require('express')
-  , mongodb = require('mongodb')
   , mdns = require('node-bj')
-  , app = express.createServer()
+  , app = express.createServer().listen(HTTP_PORT)
   , io = require('socket.io').listen(app);
 
-var ad = mdns.createAdvertisement('balibot', 9090);
-ad.start();
+var ad = mdns.createAdvertisement('balibot', CLIENT_PORT).start();
 
-var browserSocket = 40; // isto não é quarenta
-
-var server = new mongodb.Server("127.0.0.1", 27017, {});
-var playersCollection;
-
-new mongodb.Db('balibot', server, {}).open(function (error, client) {
-  if (error) throw error;
+// Socket for special browser client
+var browser = {
+  socket: null,
   
-  playersCollection = new mongodb.Collection(client, 'players');
-});
+  send: function(type, object) {
+    if (this.socket != null) {
+      this.socket.emit(type, object);
+    } else {
+      console.log("Could not send to browser because browser socket is closed.");
+    }
+  }
+};
 
-
-app.configure(function(){
+// Public directory for browser
+app.configure(function() {
   app.use(express.static(__dirname + '/public'));
 });
 
-app.listen(9091);
+// Serve index.html
 app.get('/', function(req, res) {
   res.sendfile(__dirname + '/index.html');
 });
 
-io.sockets.on('connection', function (socket) {
-  browserSocket = socket;
+io.sockets.on('connection', function(socket) {
+  browser.socket = socket;
   
-  console.log("new browser client: ", socket.id);
-  socket.emit('ready', { hello: 'server is ready and accepting clients' });
-  // possible messages:
-    //   player_added
-    //   game_started
-    //   player_dead
-    //   game_finished
-  socket.on('game_started', function (data) {
-    console.log("NEW GAME HAS STARTED", data);
+  /*
+  * Browser requests game state
+  */
+  socket.on('state', function() {
+    var players = playerManager.getAllPlayers();
+    for (var i=0; i<players.length; i++) {
+      var p = players[i];
+      browser.send('join', {name: p.name, imei: p.imei});
+    }
   });
-  socket.on('color', function (data) {
+  
+  /*
+  * Game engine sets player color
+  */
+  socket.on('color', function(data) {
     var player = playerManager.findByImei(data.imei);
-    
-    if(player!=null){
+    // If player found, send the color in hex
+    if (player != null) {
       player.send("color:"+data.color);
-      player.send("started:"+data.started);
-    } else console.log("o player é null!!!!!!!!!!!! --------------- color,54");
-    
+    }
   });
   
-  socket.on('die', function (data) {
-    p = playerManager.findByImei(data.playerImei);
-    if(p!=null) 
-      p.send("die"); 
-    else
-      console.log("o player é null!!!!!!!!!!!! --------------- die,65, "+data.playerImei);
-        
-  });
-
-  socket.on('game_finished', function (data) {
-    console.log("THIS GAME HAS JUST FINISHED", data);
-    for(i=0;i<=data.scores.length;i++){
-      var player = data.scores[i];
-      playersCollection.find({IMEI: player.imei}, {limit:1}).toArray(function(err, results) {
-        if(err){
-          console.log("BODE GRANDE: " + err);
-        }
-      
-        if(results.length > 0){
-          playerOnTheDB = results[0];
-        }
-
-        playersCollection.findAndModify({IMEI: player.imei}, [['_id','asc']], {$set: {high_score: player.score}}, {limit:1},
-          function(err, object) {
-            if (err) console.warn(err.message);
-            else console.dir(object);  // undefined if no matching object exists.
-          });
-      });
+  /*
+  * Send die message to player
+  */  
+  socket.on('die', function(data) {
+    var player = playerManager.findByImei(data.imei);
+    // If player found send 'die' message
+    if (player != null) {
+      player.send("die"); 
     }
   });
 });
 
-/*******************
-* Client code
-*******************/
+/******************************************
+* Android side code
+*******************************************/
 var net = require('net');
-var util = require('util');
 
 // Message types
 var TYPE_ID = "id";
@@ -102,102 +86,82 @@ var TYPE_POS = "pos";
 var TYPE_COLOR = "color";
 
 var server = net.createServer(function(socket) {
-  
-  // on client data    
+  //--------------------------
+  // Received messages
+  //--------------------------
   socket.on('data', function(data) {
     var msg = data.toString('utf8', 0, data.length).split(":");
     var type = msg[0];
     
+    /**
+    * 'id' message from client
+    */
     if (type == TYPE_ID) {
       var imei = msg[1];
       var name = msg[2];
-      console.log("IMEI:"+imei);
-      console.log("Nickname:"+name);
-      playerManager.addPlayer(socket, imei, name);
-
-      codebots.downloadBotForUser(name, function(bot_url) {
-        socket.write("bot:"+bot_url+"\n");
-        browserSocket.emit('bot', {imei: imei, bot_url:bot_url});
-      });
-
-      var playerOnTheDB;
-      browserSocket.emit('join', {name: name, imei: imei});
       
-      playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, docs) {
-
-      if (docs.length > 0)
-        playerOnTheDB = docs[0];
-          
-      playersCollection.insert({IMEI: imei, name: name, score: 0}, {safe:true}, function(err, objects) {
-        if (err) console.warn(err.message);
-        if (err && err.message.indexOf('E11000 ') !== -1) {
-          console.log("duplicated id");
-        }
-      });
-      
-      playersCollection.find({IMEI: imei}, {limit:1}).toArray(function(err, results) {
-        if(err){
-          console.log("BODE GRANDE: " + err);
-        }
-      
-        if(results.length > 0){
-          playerOnTheDB = results[0];
-        }
-      });
-      
-      });
-    } else if (type == TYPE_POS) {
-      console.log("Position change: "+msg[1]);
-      browserSocket.emit('pos', {imei: msg[2], pos: msg[1]});
-    } else if (type == TYPE_GO) {
+      // Add to playerlist
+      if (playerManager.addPlayer(socket, imei, name) == true) {
+        browser.send('join', {name: name, imei: imei});
+        
+        // Return bot image to browser
+        /*codebots.downloadBotForUser(name, function(botURL) {
+          browser.send('bot', {imei: imei, bot_url:botURL});
+        });*/
+      } else {
+        // TODO: could not add player to player list
+        console.log("Could not add player to players list! Closing socket.");
+        socket.destroy();
+      }
+    }
+    
+    /**
+    * 'pos' message from client
+    */
+    else if (type == TYPE_POS) {
+      var player = playerManager.findByImei(msg[2]);
+      if (player != null) {
+        browser.send('pos', {imei: player.imei, pos: msg[1]});
+      }
+    }
+    
+    /**
+    * 'go' message from client
+    */
+    else if (type == TYPE_GO) {
       console.log("Starting a new game");
-      browserSocket.emit('startgame');
-    } else {
+      browser.send('startgame');
+    }
+    
+    /**
+    * unknown command
+    */
+    else {
       console.log("Unknown message type from client! (cheater?)");
     }
   });
   
-  // on disconnect
-  socket.on('close', function(data) {
-    console.log("Disconnected");   
-     
-    player = playerManager.findDisconnected();
-    if(player!=null)
-      browserSocket.emit('close', {imei: player.imei});
-    else console.log("could not disconnect, can't find socket");
+  //--------------------------
+  // Player disconnects (socket close)
+  //--------------------------
+  socket.on('close', function() {
+    console.log("Disconnected socket!");
+    player = playerManager.findClosed();
     
-    playerManager.clearDeadPeople();
+    if (player != null) {
+      console.warn("Deleted player "+player.name+" from list");
+      playerManager.removePlayer(player.imei)
+      browser.send('close', {imei: player.imei});
+    }
+    else {
+      console.warn("Could not disconnect, can't find socket!!");
+    }
   });
-  
-  
-  /*
-  socket.on('end', function(data) {
-    console.log("Disconnected - end");   
-     
-    player = playerManager.findBySocket(socket);
-    if(player!=null)
-      browserSocket.emit('close', {imei: player.imei});
-    else console.log("could not disconnect, can't find socket")
-  });
-  
-  socket.on('timeout', function(data) {
-    console.log("Disconnected - timeout");   
-     
-    player = playerManager.findBySocket(socket);
-    if(player!=null)
-      browserSocket.emit('close', {imei: player.imei});
-    else console.log("could not disconnect, can't find socket")
-  });
-  */
-  
-  
-  
 });
 
 server.on('connection', function(socket) {
-  console.log("New Connection"); 
-   
-  
+  console.log("New Connection from player!");
 });
 
-server.listen(9090);
+server.maxConnections = playerManager.MAX_PLAYERS;
+server.listen(CLIENT_PORT);

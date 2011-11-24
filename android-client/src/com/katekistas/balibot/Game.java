@@ -17,6 +17,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -163,21 +164,6 @@ public class Game extends Activity implements SensorEventListener {
 			left.setAlpha(50);
 			right.setAlpha(50);
 		}
-		
-		/*if (pitch<-TRESHOLD && lastPos != POSITION_RIGHT) {
-			lastPos = POSITION_RIGHT;
-			client.sendTurn(POSITION_RIGHT);
-			right.setAlpha(100);
-		} else if (pitch > TRESHOLD && lastPos != POSITION_LEFT) {
-			lastPos = POSITION_LEFT;
-			client.sendTurn(POSITION_LEFT);
-			left.setAlpha(100);
-		} else if (lastPos != POSITION_CENTER && (pitch>=-TRESHOLD && pitch<=TRESHOLD)) {
-			lastPos = POSITION_CENTER;
-			client.sendTurn(POSITION_CENTER);
-			right.setAlpha(50);
-			left.setAlpha(50);
-		}*/
 	}
 	
 	public void _startGame(View view) {
@@ -200,6 +186,13 @@ public class Game extends Activity implements SensorEventListener {
 			//Bitmap bot = getBot(msg[1]);
 			//ImageView botView = (ImageView)this.findViewById(R.id.bot);
 			//botView.setImageBitmap(bot);
+		} else if (type.equalsIgnoreCase("die")) {
+			new Thread(){
+        public void run(){
+        	final MediaPlayer mp = MediaPlayer.create(Game.this, R.raw.boom);   
+        	mp.start();
+        }
+       }.start();
 		}
 	}
 	

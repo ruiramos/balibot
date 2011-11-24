@@ -49,7 +49,7 @@ Engine.prototype.draw = function() {
 		
 			if (this.hitTest({x: player.x + deltaX, y: player.y + deltaY})) {
 				
-				this.playerRank.unshift(player.ID);
+				this.playerRank.unshift(player.imei);
 				
 				player.isAlive = false;
 				hit = true;
@@ -68,7 +68,7 @@ Engine.prototype.draw = function() {
 				
 				if (count < 2) this.stop();
 					
-				this.checkForCallback(player.ID);
+				this.checkForCallback(player.imei);
 				
 				if (count < 2) {
 					if (this.onRoundOver) {
@@ -121,7 +121,7 @@ Engine.prototype.hitTest = function(point) {
 	return false;
 };
 
-Engine.prototype.checkForCallback = function(ID) {
+Engine.prototype.checkForCallback = function(imei) {
 	
 	// FIXME: It's still triggering more than one callback sometimes.
 	
@@ -129,18 +129,18 @@ Engine.prototype.checkForCallback = function(ID) {
         return;
     }
 	
-	if (this.lastHit === null || this.lastHit != ID) {
-        this.onCollision(ID);
+	if (this.lastHit === null || this.lastHit != imei) {
+        this.onCollision(imei);
     }
 	
-	this.lastHit = ID;
+	this.lastHit = imei;
 };
 
 /* ---- Getter & Setter ---- */
 Engine.prototype.setCollisionCallback = function(callback) {
-	this.onCollision = callback;
+  this.onCollision = callback;
 };
 
 Engine.prototype.setRoundCallback = function(callback) {
-	this.onRoundOver = callback;
+  this.onRoundOver = callback;
 };

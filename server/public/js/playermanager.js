@@ -1,149 +1,126 @@
 var PlayerManager = function() {
-    this.players = [];
-    this.colorManager = new ColorManager(Config.colorSaturation, Config.colorValue);
+  this.players = [];
+  this.colorManager = new ColorManager(Config.colorSaturation, Config.colorValue);
 };
 
-PlayerManager.prototype.addPlayer = function(name) {
-    var newPlayer = new Player();
-    
-    newPlayer.name = name;
-    newPlayer.color = this.getColor();
-	
-    newPlayer.ID = this.players.length;
-
-    return this.playerPush(newPlayer);
+PlayerManager.prototype.addPlayer = function(name, imei) {
+  var player = new Player();
+  
+  player.name = name;
+  player.imei = imei;
+  player.color = this.getColor();
+  
+  this.players.push(player);
+  return player;
 };
 
-PlayerManager.prototype.playerPush = function (newPlayer) {
-	for (var i=0; i < this.players.length; i++) {
-		var player = this.players[i];
-		
-		if (player.canceled) {
-			this.players[i] = newPlayer;
-			return i;
-		}
-	}
-	
-	this.players.push(newPlayer);
-	
-	return this.players.length - 1;
-};
-
-PlayerManager.prototype.removePlayer = function(playerID) {
-	this.getPlayerByID(playerID).canceled = true;
-};
-
-PlayerManager.prototype.activatePlayer = function(playerID) {
-	this.getPlayerByID(playerID).canceled = false;
-};
+PlayerManager.prototype.removePlayer = function(imei) {
+  for (var i=0; i<this.players.length; i++) {
+    var player = this.players[i];
+    if (player.imei == imei) {
+      this.players.splice(i, 1);
+      return;
+    }
+  }
+}
 
 PlayerManager.prototype.initializePlayers = function() {
-    for (var i = 0; i < this.players.length; i++) {
-        var player = this.players[i];
-
-        player.x = Utilities.random(Config.canvasWidth / 4, 3 * Config.canvasWidth / 4);
-        player.y = Utilities.random(Config.canvasHeight / 4, 3 * Config.canvasHeight / 4);
-        player.angle = Math.random() * 360;	
-        player.isPlaying = true;
-        player.isAlive = true;
-		player.resetTimeout();
-    }
+  for (var i=0; i<this.players.length; i++) {
+    var player = this.players[i];
+    player.x = Utilities.random(Config.canvasWidth / 4, 3 * Config.canvasWidth / 4);
+    player.y = Utilities.random(Config.canvasHeight / 4, 3 * Config.canvasHeight / 4);
+    player.angle = Math.random() * 360;
+    player.isPlaying = true;
+    player.isAlive = true;
+    player.resetTimeout();
+  }
 };
+
+PlayerManager.prototype.getPlayer = function(imei) {
+  for (var i=0; i<this.players.length; i++) {
+    var player = this.players[i];
+    if (player.imei == imei) {
+      return player;
+    }
+  }
+  return null;
+}
 
 PlayerManager.prototype.getColor = function() {
-    return this.colorManager.convertRGBToHex(this.colorManager.getColor());
-};
-PlayerManager.prototype.getNewPlayerColor = function(playerID) {
-    newColor = this.colorManager.convertRGBToHex(this.colorManager.getColor());
-    this.players[playerID].color = newColor;
-    return newColor;
-
+  return this.colorManager.convertRGBToHex(this.colorManager.getColor());
 };
 
-PlayerManager.prototype.navigatePlayer = function(playerID, direction) {
-    var player = this.getPlayerByID(playerID);
-    if(player!=null)
-      player.navigate(direction);
-    else
-      console.log("bode no navigate... " +playerID);
+PlayerManager.prototype.getNewPlayerColor = function(imei) {
+  var newColor = this.getColor();
+  var player = this.getPlayer(imei);
+  player.color = newColor;
+  return newColor;
+};
+
+PlayerManager.prototype.navigatePlayer = function(imei, direction) {
+  var player = this.getPlayer(imei);
+  player.navigate(direction);
 };
 
 PlayerManager.prototype.numberOfPlayersAlive = function() {
-    var count = 0;
-
-    for (var i = 0; i < this.players.length; i++) {
-        if (this.players[i].isAlive && !this.players[i].canceled) {
-            count++;
-        }
+  var count = 0;
+  for (var i=0; i<this.players.length; i++) {
+    if (this.players[i].isAlive) {
+      count++;
     }
-
-    return count;
+  }
+  return count;
 };
 
 PlayerManager.prototype.numberOfPlayers = function() {
-    var count = 0;
-
-    for (var i = 0; i < this.players.length; i++) {
-        if (!this.players[i].canceled) {
-            count++;
-        }
-    }
-
-    return count;
+  return this.players.length;
 };
 
 PlayerManager.prototype.resetScores = function() {
-	for (var i = 0; i < this.players.length; i++) {
-		this.players[i].wins = 0;
-		this.players[i].distane = 0;
-	}
+  for (var i=0; i<this.players.length; i++) {
+    this.players[i].wins = 0;
+    this.players[i].distane = 0;
+  }
 };
 
-/* ---- GETTER & SETTER ---- */
-PlayerManager.prototype.getPlayerByID = function(playerID) {
-    return this.players[playerID]; 
+PlayerManager.prototype.getPlayerName = function(imei) {
+  var player = this.getPlayer(imei);
+  return player.name;
 };
 
-PlayerManager.prototype.getPlayerName = function(playerID) {
-    return this.players[playerID].name;
+PlayerManager.prototype.getPlayerDistance = function(imei) {
+  var player = this.getPlayer(imei);
+  return player.distance;
 };
 
-PlayerManager.prototype.getPlayerDistance = function(playerID) {
-    return this.players[playerID].distance;
+PlayerManager.prototype.getPlayerColor = function(imei) {
+  var player = this.getPlayer(imei);
+  return player.color;
 };
 
-PlayerManager.prototype.getPlayerColor = function(playerID) {
-    return this.players[playerID].color;
-};
-
-PlayerManager.prototype.getPlayerWins = function(playerID) {
-    return this.players[playerID].wins;
+PlayerManager.prototype.getPlayerWins = function(imei) {
+  var player = this.getPlayer(imei);
+  return player.wins;
 };
 
 PlayerManager.prototype.getAlivePlayers = function() {
-	var alivePlayers = [];
-	
-	for (var i = 0; i < this.players.length; i++) {
-        if (this.players[i].isAlive && !this.players[i].canceled) {
-            alivePlayers.push(this.players[i].ID);
-        }
+  var alivePlayers = [];
+  
+  for (var i=0; i<this.players.length; i++) {
+    if (this.players[i].isAlive) {
+      alivePlayers.push(this.players[i].imei);
     }
-	
-	return alivePlayers;
+  }
+  return alivePlayers;
 };
 
 PlayerManager.prototype.getDeadPlayers = function() {
-	var deadPlayers = [];
-	
-	for (var i = 0; i < this.players.length; i++) {
-        console.log("deadPlayersSearch: "+this.players[i].name+" "+this.players[i].isAlive);
-        if (!this.players[i].isAlive) {
-            deadPlayers.push(this.players[i].ID);
-        }
+  var deadPlayers = [];
+  
+  for (var i=0; i<this.players.length; i++) {
+    if (!this.players[i].isAlive) {
+      deadPlayers.push(this.players[i].imei);
     }
-	
-	return deadPlayers;
+  }
+  return deadPlayers;
 };
-
-
-

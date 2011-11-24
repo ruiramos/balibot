@@ -1,491 +1,176 @@
 $(document).ready(function() {
 
-//global window: false
-
 var game = Game || {};
 
 (function(Game) {
-    var canvasID = 'canvas',
-        domCanvas = document.getElementById(canvasID),
- //       domStartGameButton = document.getElementById('startgame'),
-//        domAddPlayerButton = document.getElementById('addplayer'),
-        minimalPlayerNameLength = 2,
-        keysInUse = {},
-        currentDirections = {},
-        temporaryString,
-        numberOfUnusedControls,
-        temporarySortItem,
-        numberOfDirectionProcessesPerSecond = 100,
-        processCurrentDirectionsIntervalID,
-        scoreList = [],
-        roundResult = [],
-        gameStarted = false,
-        playerImeiToId = [],
-        i,
-        j,
-        socket,
-        pendingPlayers = [],
-        controls=0,
-        player,
-        players = [],
-        keyPressCount = 0,
-        listOfControls = [
-            {
-                label: 'Left / Right',
-                leftKeyCode: 37,
-                rightKeyCode: 39,
-                inUse: false
-            },
-            {
-                label: 'A / S',
-                leftKeyCode: 65,
-                rightKeyCode: 83,
-                inUse: false
-            },
-            {
-                label: 'G / H',
-                leftKeyCode: 71,
-                rightKeyCode: 72,
-                inUse: false
-            },
-            {
-                label: 'K / L',
-                leftKeyCode: 75,
-                rightKeyCode: 76,
-                inUse: false
-            }
-        ],
-        game = new Game(canvasID, 600, 600, true),
-        drawingContext = game.getDrawingContext(),
-        setCurrentDirection = function(playerID, direction) {
-            currentDirections[playerID] = direction;   
-        },
-        
-        // *** HANDLERS ***
-        /*handleKeyUp = function(event) {
-            if (keysInUse[event.keyCode]) {
-                setCurrentDirection(keysInUse[event.keyCode].playerID, 0);
-                keyPressCount++;
-            }
-        },
-        handleKeyDown = function(event) {
-            if (keysInUse[event.keyCode]) {
-                setCurrentDirection(keysInUse[event.keyCode].playerID, keysInUse[event.keyCode].direction);
-            }
-        },*/
-        handleStartGameClick = function() {
-            gameStarted = true;
-            game.start();
-            clearInterval(processCurrentDirectionsIntervalID);
-            startCurrentDirectionsProcess();
-        },
-        handleAddPlayerClick = function() {
-            addPlayer("player", controls);
-            controls++;
-            console.log('add player');
-        },
-        handlePlayerDeath = function(playerID){
-            for(i=0; i<players.length;i++)
-              if(players[i].ID == playerID){
-                socket.emit('die', {playerImei: players[i].imei});
-                console.log("------------ morreu o :"+players[i].name);
-                break;
-              }
-          
-        }
-        handleRoundEnd = function(statistics) {
-            game.stop();
-            clearInterval(processCurrentDirectionsIntervalID);
-            console.log('roundEnd');
-            saveEndscreen();
-            roundResult = statistics.rank;
-            
-            for (i = 0; i < players.length; i++) {
-                if (players[i].isPlaying) {
-                    players[i].points = game.playerManager.getPlayerWins(players[i].ID);   
-                }
-            }
+  var socket = io.connect(),
+    canvasID = 'gamecanvas',
+    canvas = $('gamecanvas'),
+    currentDirections = {},
+    numberOfDirectionProcessesPerSecond = 100,
+    processCurrentDirectionsIntervalID,
+    gameStarted = false,
+    pendingPlayers = [];
+    
+    // Let's expand the game container to maximum possible
+    // excluding the player list. I'm saving 8 pxs for the
+    // 4px border on canvas.
+    var ui = new Ui();
+    ui.expandContainer();
+    var contW = parseInt($('#container').width())-8;
+    var contH = parseInt($('#container').height())-8;
 
-            //updatePlayerList();
-            drawEndScreen();
-            gameStarted = false;
-            
-            
-            // pending players
-            if(pendingPlayers.length > 0){
-              $.each(pendingPlayers, function(i, player){
-                activateControls(player.ID, player.controlID);
-                players[player.ID].isPlaying = true;
-                players[player.ID].isActive = true;
-                
-              });
-              pendingPlayers = [];
-            }
-            
-            
-            setTimeout(function() {
-              console.log(gameStarted);
-                if(!gameStarted){
-                  drawLobbyScreen();
-                } 
-            }, 2500);
-        },
-        handleRemovePlayerClick = function(event) {
-            if (event.target.nodeName.toUpperCase() == 'SPAN') {
-                removePlayer(event.target.parentNode.id);
-            };
-        },
-        
-        // **** DRAW SCREENS ****
-        drawEndScreen = function() {
-            console.log('end');
-            
-            drawingContext.font = "70px 'Commodore 64 Pixelized'";
-            drawingContext.textAlign = 'center';
-            var start = (domCanvas.clientHeight / 2) - (50 * players.length) / 2;
-            
-            console.log(roundResult);
+    // The 3rd parameter tells the game that canvas will be "full screen"
+    var game = new Game(canvasID, contW, contH, false),
 
-            for (i = 0, pos = 0; i < roundResult.length; i++) {
-              if(players[roundResult[i]]){
-                drawingContext.fillStyle = players[roundResult[i]].color;
-                drawingContext.fillText(pos + 1 + '. ' + players[roundResult[i]].name, domCanvas.clientWidth / 2, start + i * 50);
-                pos++;
-              }
-            }
-                        
-        },   
-        drawLobbyScreen = function() {
-          console.log('lobby');
-          
-          game.clearFrame();
-          
-          drawingContext.fillStyle = "#368b37";
-          drawingContext.fillRect(0, 0, Config.canvasWidth, Config.canvasHeight);
-          
-          var startY = 100;
-          var startX = 0;
-          
-          drawingContext.fillStyle = "#38b95a";
-          drawingContext.fillRect(startX+50, startY, Config.canvasWidth, 25);
-          
-          var img = new Image();
-          img.onload = function(){
-            drawingContext.drawImage(img,startX-10,startY-75);
-          };
-          img.src = '/bot.png';
-          
-          
-          startYt = (domCanvas.clientHeight / 2)+35;
-          startXt =  30;
-          
-          drawingContext.font = "90px 'bitween 10'";
-          drawingContext.textAlign = 'left';
-          drawingContext.fillStyle = "white";
-          drawingContext.fillText("BALIBOT", startXt, startYt);
-          
-          drawingContext.font = "22px 'Commodore 64 Pixelized'";
-          
-          drawingContext.fillText("Please connect controllers and", startXt, startYt+40);
-          drawingContext.fillText("press the Start button!", startXt, startYt+62);
-          
-          drawPlayers();
-
-        },   
-        drawPlayers = function(){
-          //draw players
-          
-          drawingContext.fillStyle = "#368b37";
-        	drawingContext.fillRect(700, 100, Config.canvasWidth, Config.canvasHeight);
-          drawingContext.fillStyle = "white";
-          
-          var startYp = 120;
-          var startXp = 750;
-          drawingContext.font = "18px 'Commodore 64 Pixelized'";
-          drawingContext.textAlign = 'left';
-          drawingContext.fillText(game.activePlayers() + " players", startXp-2, startYp);
-          startYp += 15;
-          
-          for(i=0;i<players.length;i++){
-            if(players[i].isActive) drawPlayer(startXp, startYp, players[i]);
-            //else drawInactivePlayer(startXp, startYp, players[i]);
-            startYp += 105;
-          }
-          
-        },
-        drawPlayer = function(x, y, player){
-          var playerSqWidth = 125;
-          var playerSqHeight = 100;
+    /**
+    * Starts the game, hidding the lobby, showing the canvas
+    * and setting gameStarted to true. Also sets the starting
+    * directions for each player.
+    */
+    startGame = function() {
+      ui.toggleLobby();
+      gameStarted = true;
+      game.start();
+      clearInterval(processCurrentDirectionsIntervalID);
+      startCurrentDirectionsProcess();
+    },
+    
+    /**
+    * This is where we define what happens when a round ends.
+    * We must show the score for that round, update player scores
+    * and update the player list with the total score for
+    * each player.
+    */
+    handleRoundEnd = function(scores) {
+      game.stop();
+      clearInterval(processCurrentDirectionsIntervalID);
       
-          drawingContext.fillStyle = "#38b95a";
-          drawingContext.fillRect(x, y, playerSqWidth, playerSqHeight);
-          
-          var img = new Image();
-          img.onload = function(){
-            drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
-          };
-          img.src = '/bots/'+player.name+".png";
-          
-          drawingContext.fillStyle = player.color;
-        	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
-          drawingContext.fillStyle = "white";
-          drawingContext.font = "12px 'Commodore 64 Pixelized'";
-          drawingContext.textAlign = 'center';
-          drawingContext.fillText(player.name, x+playerSqWidth/2, y+playerSqHeight-5);
-          
-        },
-        drawInactivePlayer = function(x, y, player){
-          var playerSqWidth = 125;
-          var playerSqHeight = 100;
+      // Show the score table ordered by deaths
+      ui.showScoreTable(scores, game.playerManager);
+      gameStarted = false;
       
-          drawingContext.fillStyle = "#aeaeae";
-          drawingContext.fillRect(x, y, playerSqWidth, playerSqHeight);
-          
-          var img = new Image();
-          img.onload = function(){
-            drawingContext.drawImage(img,x+playerSqWidth/2-(75/2),y+4, 75, 75);
-          };
-          img.src = '/bots/'+player.name+".png";
-          
-          drawingContext.fillStyle = player.color;
-        	drawingContext.fillRect(x+2, y+playerSqHeight-17, playerSqWidth-4, 15);
-          drawingContext.fillStyle = "white";
-          drawingContext.font = "12px 'Commodore 64 Pixelized'";
-          drawingContext.textAlign = 'center';
-          drawingContext.fillText(player.name, x+playerSqWidth/2, y+playerSqHeight-5);
-          
-        }, 
-        setPlayerBot = function(imei, bot_url){
-          if( (id = playerImeiToId[imei]) >= 0){ 
-            players[id].bot_url = bot_url;
-            game.setPlayerBot(id, bot_url);
-          }
-        }       
-        addPlayer = function(name, imei) {
-            player = {};
-                        
-                        
-            if( (id = playerImeiToId[imei]) >= 0){ 
-              console.log(players[id].name);
-              game.activatePlayer(id);
-              players[id].isActive = true;
-              players[id].isPlaying = true;
-              players[id].color = game.playerManager.getNewPlayerColor(id);
-              updatePlayerList();
-              return players[id];
-            }
-            
-            player.ID = game.addPlayer(name);
-            player.imei = imei;
-            playerImeiToId[player.imei] = player.ID;
-            
-            player.name = name;
-            player.color = game.playerManager.getPlayerColor(player.ID);
-            player.controlID = 0;
-            player.points = 0;
-            player.isPlaying = true;
-            
-            
-            if(!gameStarted){
-              activateControls(player.ID, player.controlID);
-              player.isActive = true;
-            } else {
-              player.isPlaying = false;
-              pendingPlayers.push(player);
-            }
-            
-            players.push(player);
-            updatePlayerList();            
-            if(gameStarted) game.drawPlayers();
-            
-            
-            return player;
+      // Go through the players and update score
+      for (var i=0; i<scores.rank.length; i++) {
+        var player = game.getPlayer(scores.rank[i]);
+        player.score = player.score + scores.rank.length-(i+1);
+        // update score on the ui
+        ui.updateScore(player);
+      }
 
-        },
-        removePlayer = function(playerID) {
-          console.log('remove player');
-          
-            game.removePlayer(playerID);
-            var index = -1;
-
-            for (i = 0; i < players.length; i++) {
-                if (players[i].ID == playerID) {
-                    index = i;
-                    break;
-                }
-            }
-
-            currentDirections[playerID] = 0;
-            players[index].isPlaying = false;
-            players[index].isActive = false;
-            
-
-            //writePlayerControls();
-            updatePlayerList();
-        },
-        
-
-        processCurrentDirections = function() {
-            for (var playerID in currentDirections) {
-                if (currentDirections.hasOwnProperty(playerID)) {
-                    game.handleControl(playerID, currentDirections[playerID]);
-                }
-            }
-        },
-        startCurrentDirectionsProcess = function() {
-            processCurrentDirectionsIntervalID = setInterval(processCurrentDirections, 1000 / numberOfDirectionProcessesPerSecond);
-        },
-        activateControls = function(playerID, controlID) {
-          /*
-          console.log('activateControls: '+playerID+" - "+controlID);
-          
-            keysInUse[listOfControls[controlID].leftKeyCode] = {
-                playerID: playerID,
-                direction: -1
-            };
-
-            keysInUse[listOfControls[controlID].rightKeyCode] = {
-                playerID: playerID,
-                direction: 1
-            };
-
-            listOfControls[controlID].inUse = true;*/
-        },
-        updatePlayerList = function() {
-          if(gameStarted) return;
-          drawPlayers();
-          console.log('update player list - TODO');
-            
-           /* if (players.length) {
-                domPlayerListContainer.className = 'show';
-
-                scoreList = [];
-
-                for (i = 0; i < players.length; i++) {
-                    if (players[i].isPlaying) {
-                        scoreList.push(players[i]);
-                    }
-                }
-
-                Utilities.sort(scoreList, 'points');
-
-                temporaryString = '';
-
-                for (i = 0; i < scoreList.length; i++) {
-                    temporaryString += '<li id="' + scoreList[i].ID + '" style="color:' + scoreList[i].color + ';"> ' + scoreList[i].name + ' - ' + scoreList[i].points + '  points <span>Remove</span></li>';
-                }
-
-                domPlayerList.innerHTML = temporaryString;
-            } else {
-                domPlayerListContainer.className = 'hide';
-            }*/
-        },
-        getNumberOfUnusedControls = function() {
-           /* numberOfUnusedControls = 0;
-
-            for (i = 0; i < listOfControls.length; i++) {
-                if (!listOfControls[i].inUse) {
-                    numberOfUnusedControls++;
-                }
-            }
-
-            return numberOfUnusedControls;*/
-        },
-        checkPlayerLimit = function() {
-            /*if (getNumberOfUnusedControls()) {
-                domAddPlayerContainer.className = 'show';
-            } else {
-                domAddPlayerContainer.className = 'hide';
-            }*/
-        },
-        saveEndscreen = function() {
-            if (keyPressCount < 2) return;
-
-            var data = domCanvas.toDataURL("image/png");
-
-            $.ajax({
-                url: "./endscreens/save.php",
-                type: "POST",
-                data: { data: data, keyPressCount: keyPressCount },
-                success: function(response) {}
-            });
-
-            keyPressCount = 0;
-        }, 
-        init = function() {
-          
-          //handlers
-          //window.onkeydown = handleKeyDown;
-          //window.onkeyup = handleKeyUp;  
-
-//          domAddPlayerButton.onclick = handleAddPlayerClick;
-//          domStartGameButton.onclick = handleStartGameClick;
-//          domStartGameButton.disable = true;
-          
-          game.setRoundCallback(handleRoundEnd);
-          game.setCollisionCallback(handlePlayerDeath);
-          
-          //init 
-          drawLobbyScreen();
-          game.startSession();
-
-          socket = io.connect();           
-           
-          socket.on('ready', function (data) {
-          console.log("SERVER IS READY, ", data);
-            // possible messages:
-            //   player_added
-            //   game_started
-            //   player_dead
-            //   game_finished
-          socket.emit('game_started', { hello: 'viva amigos!' });
-          });
-        
-          socket.on('join', function (player) {
-            if(players.length==6) {
-              //cheio!
-              console.log("Server Cheio: ");
-              socket.emit('color', { imei: -1, color: "", started: true });
-
-            } else {
-              console.log("PLAYER HAS JOINED: ", player.name);
-              p = addPlayer(player.name, player.imei);            
-              socket.emit('color', { imei: player.imei, color: p.color, started: gameStarted });
-              console.log("SENT COLOR: "+p.color);
-            }
-          });
-        
-          socket.on('pos', function (data) {
-            imei = data.imei;
-            imei = imei.replace("pos","");
-            
-            if(playerImeiToId[imei] >= 0)
-              setCurrentDirection(playerImeiToId[imei], data.pos);       
-            else
-              console.log("MEGA BODE!!!!!!!!!!!! " + imei);
-          });
-          
-          socket.on('bot', function (data) {
-            //setPlayerBot(data.imei, "http://codebits.eu"+data.bot_url);
-          });
-          
-        
-          socket.on('close', function (data) {
-            console.log('Disconnected player '+data.imei);
-            removePlayer(playerImeiToId[data.imei]);                        
-          });
-          
-          socket.on('startgame', function (data) {
-            if(!gameStarted)
-              handleStartGameClick();
-          });
-          
-          
-        
+      /* Pending players
+      if (pendingPlayers.length > 0) {
+        $.each(pendingPlayers, function(i, player) {
+          players[player.ID].isPlaying = true;
+          players[player.ID].isActive = true;
+        });
+        pendingPlayers = [];
+      }*/
+      
+      // Timeout to hide the score table and go to lobby
+      setTimeout(function() {
+        if (!gameStarted) {
+          ui.toggleLobby();
+          ui.hideScoreTable();
         }
-        
-        init();
-             
-})(Game);
+      }, 14500);
+    },
 
+    /**
+    * When a player dies the imei is the unique id
+    * of the dying player.
+    */
+    handlePlayerDeath = function(imei) {
+      var player = game.getPlayer(imei);
+      socket.emit('die', {imei: player.imei});
+    },
+    
+    /**
+    * Adds a player to the game. Also adds the player to the player
+    * list on the Ui.
+    */
+    addPlayer = function(name, imei) {
+      var player = game.addPlayer(name, imei);
+      player.color = game.playerManager.getPlayerColor(imei);
+      player.points = 0;
+      player.isPlaying = true;
+      
+      if (!gameStarted) {
+        player.isActive = true;
+      } else {
+        player.isPlaying = false;
+        pendingPlayers.push(player);
+      }
+      
+      ui.addPlayer(player);
+      return player;
+    },
+    
+    removePlayer = function(imei) {
+      game.removePlayer(imei);
+      ui.removePlayer(imei);
+    },
+    
+    processCurrentDirections = function() {
+      var alive = game.playerManager.getAlivePlayers();
+      for (var i=0; i<alive.length; i++) {
+        var player = game.getPlayer(alive[i]);
+        game.handleControl(player.imei, player.currentDirection);
+      }
+    },
+    
+    startCurrentDirectionsProcess = function() {
+      processCurrentDirectionsIntervalID = setInterval(processCurrentDirections, 1000 / numberOfDirectionProcessesPerSecond);
+    },
+
+    setCurrentDirection = function(imei, direction) {
+      var player = game.getPlayer(imei);
+      player.currentDirection = direction;
+    },
+    
+    init = function() {
+      game.setRoundCallback(handleRoundEnd);
+      game.setCollisionCallback(handlePlayerDeath);
+      
+      game.startSession();
+      
+      // Get game state (useful when refreshing browser)
+      socket.emit('state');
+
+      addPlayer("braposo", 120312);
+      addPlayer("tpinto", 12931);
+      addPlayer("pelf", 23133);
+
+      // Player joins
+      socket.on('join', function (data) {
+        var player = addPlayer(data.name, data.imei);
+        socket.emit('color', {imei: player.imei, color: player.color});
+      });
+      
+      // Player send position
+      socket.on('pos', function (data) {
+        if (gameStarted) {
+          var imei = data.imei;
+          imei = imei.replace("pos",""); // HACK HACK HACK why this?! 
+          setCurrentDirection(imei, data.pos);
+        }
+      });
+      
+      // Player disconnects
+      socket.on('close', function (data) {
+        console.log('Disconnected player '+data.imei);
+        removePlayer(data.imei);
+      });
+      
+      // Players wants to start game!
+      socket.on('startgame', function (data) {
+        if (!gameStarted) {
+          startGame();
+        }
+      });
+    }
+    
+    // Initialize
+    init();
+  })(Game);
 });
