@@ -60,15 +60,6 @@ var game = Game || {};
       // Activate pending players
       game.activatePending();
       ui.activatePending();
-
-      /* Pending players
-      if (pendingPlayers.length > 0) {
-        $.each(pendingPlayers, function(i, player) {
-          players[player.ID].isPlaying = true;
-          players[player.ID].isActive = true;
-        });
-        pendingPlayers = [];
-      }*/
       
       // Timeout to hide the score table and go to lobby
       setTimeout(function() {
