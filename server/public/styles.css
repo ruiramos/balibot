@@ -1,0 +1,33 @@
+body {padding:10px;background:#368b37;color:#eee;font-family:'VT323',cursive;font-size:35px}
+
+
+h1,h2,h3,h4 {font-family:'Black Ops One',cursive}
+
+h1 {font-size:4em;text-transform:uppercase;letter-spacing:0em;text-shadow:5px 5px 0 #1e4e1f}
+h2 {font-size:1.2em;text-shadow:3px 3px 0 #1e4e1f}
+
+strong {color:yellow}
+
+hr {border:0;border-top:25px solid #38b85a}
+
+#container {float:left;overflow:auto}
+
+/* Game area and lobby */
+#lobby {background:white;overflow:auto;margin-top:30px;padding:60px 20px 20px 167px;background:url(bot.png) 0 0 no-repeat}
+#lobby #innerlobby {margin-top:100px}
+#lobby #innerlobby p {display:block;float:left;width:700px}
+
+#gamecanvas {padding:0;background:#000;border:4px solid yellow}
+
+/* Round end score table */
+#endgamescores {position:absolute;background:url(trans.png) 0 0;padding:20px 40px;z-index:999;top:0;left:0}
+#endgamescores ol {font-size:1.2em;list-style:decimal;list-style-position:inside}
+#endgamescores ol li {}
+
+/* Player list */
+#players {float:right;background:#317c31;color:#fff;width:250px;padding:10px;margin:0 0 0 5px}
+#players div.player {color:#fff;clear:both;overflow:hidden;margin-top:15px;padding:5px;text-shadow:3px 3px 1px #333}
+#players div.player {-moz-box-shadow:2px 2px 1px #333;-webkit-box-shadow:2px 2px 1px #333;box-shadow:2px 2px 1px #333}
+#players div.player .bot {float:left;padding:1px;border:1px solid #1e4e1f}
+#players div.player .name {float:right;display:block}
+#players div.player .score {float:right;display:block;clear:right;font-size:3em;line-height:.6em}
