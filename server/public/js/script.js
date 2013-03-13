@@ -131,14 +131,15 @@ var game = Game || {};
       // Get game state (useful when refreshing browser)
       socket.emit('state');
 
-      addPlayer("braposo", 120312);
-      addPlayer("tpinto", 12931);
-      addPlayer("pelf", 23133);
-      startGame();
+     // addPlayer("braposo", 120312);
+    //  addPlayer("tpinto", 12931);
+  //    addPlayer("pelf", 23133);
+  //    startGame();
       
       // Player joins
       socket.on('join', function (data) {
         var player = addPlayer(data.name, data.imei);
+        console.log('Connected player '+data.name);        
         socket.emit('color', {imei: player.imei, color: player.color});
       });
       

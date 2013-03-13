@@ -49,6 +49,8 @@ io.sockets.on('connection', function(socket) {
       var p = players[i];
       browser.send('join', {name: p.name, imei: p.imei});
     }
+    
+    console.log('State sent');
   });
   
   /*
